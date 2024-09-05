@@ -18,5 +18,5 @@ class Config:
 def load_config(path: Union[str, None] = None) -> Config:
     env = Env()
     env.read_env(path)
-    return Config(db=DB(admin=env('POSTGRESQL_ADMIN'),
-                        password=env('POSTGRESQL_PASSWORD')))
+    return Config(db=DB(admin=env('POSTGRES_USER'),
+                        password=env('POSTGRES_PASSWORD')))
