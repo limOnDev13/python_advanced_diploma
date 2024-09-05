@@ -6,9 +6,6 @@ from schemas.schemas import Tweet
 from database.database import engine, Base, Session
 
 
-app = FastAPI()
-
-
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
     # Startup
@@ -27,6 +24,10 @@ async def get_session():
         await session.close()
 
 
+app = FastAPI(lifespan=lifespan)
+
+
 @app.post('/api/tweets')
 async def create_new_tweet(api_key: str, tweet: Tweet):
+
     return {"result": "true", "tweet_id": 1}
