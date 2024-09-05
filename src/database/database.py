@@ -11,3 +11,4 @@ DB_URL: str = f"postgresql+asyncpg://{config.db.admin}:{config.db.password}@loca
 engine = create_async_engine(DB_URL)
 Session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 Base = declarative_base()
+
