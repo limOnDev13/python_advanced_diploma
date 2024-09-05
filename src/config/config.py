@@ -6,8 +6,8 @@ from environs import Env
 
 @dataclass
 class DB:
-    db_admin: str
-    db_password: str
+    admin: str
+    password: str
 
 
 @dataclass
@@ -18,5 +18,5 @@ class Config:
 def load_config(path: Union[str, None] = None) -> Config:
     env = Env()
     env.read_env(path)
-    return Config(db=DB(db_admin=env('POSTGRESQL_ADMIN'),
-                        db_password=env('POSTGRESQL_PASSWORD')))
+    return Config(db=DB(admin=env('POSTGRESQL_ADMIN'),
+                        password=env('POSTGRESQL_PASSWORD')))
