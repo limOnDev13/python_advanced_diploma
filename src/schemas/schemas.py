@@ -16,3 +16,22 @@ class Tweet(BaseModel):
                     'automatically when sending a tweet and'
                     ' substitute the id from there in json.'
     )
+
+
+class ErrorDict:
+    """
+    The class is responsible for bringing exceptions
+    to the same format. When __call__ is called, it returns this dictionary.
+    Args:
+        exc (Exception): exception
+    """
+    def __init__(self, exc: Exception) -> None:
+        self.error_type: str = type(exc).__name__
+        self.error_msg: str = str(exc)
+
+    def __call__(self) -> dict[str, str]:
+        return {
+            "result": False,
+            "error_type": self.error_type,
+            "error_message": self.error_msg
+        }
