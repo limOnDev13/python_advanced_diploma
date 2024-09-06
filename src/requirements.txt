@@ -3,7 +3,7 @@ anyio==4.4.0
 asyncpg==0.29.0
 click==8.1.7
 environs==11.0.0
-fastapi==0.112.2
+fastapi==0.112.3
 fastapi-exceptions==0.1.0
 greenlet==3.0.3
 h11==0.14.0
@@ -11,6 +11,9 @@ httptools==0.6.1
 idna==3.8
 marshmallow==3.22.0
 packaging==24.1
+postgres==4.0
+psycopg2-binary==2.9.9
+psycopg2-pool==1.2
 pydantic==2.8.2
 pydantic_core==2.20.1
 python-dotenv==1.0.1
