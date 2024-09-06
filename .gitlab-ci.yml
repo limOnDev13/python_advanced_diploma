@@ -17,12 +17,10 @@ build-app:
     variables:
         POSTGRES_DB: test_db
         POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_pwd
-    artifacts:
-        when: on_success
-        expire_in: 1 hour
+        POSTGRES_PASSWORD: test_pwd    
+    cache:
         paths:
-            - .artefacts
+            - project-venv
     tags:
         - students
 
