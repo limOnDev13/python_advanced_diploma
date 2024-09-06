@@ -4,7 +4,7 @@ dict_config: dict = {
     "formatters": {
         "base": {
             "format": "%(filename)s | %(funcName)s |"
-                      " %(name)s | %(levelname)s | %(message)s"
+            " %(name)s | %(levelname)s | %(message)s"
         }
     },
     "handlers": {

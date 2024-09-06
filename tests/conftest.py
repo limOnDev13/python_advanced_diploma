@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
@@ -26,7 +26,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture(scope="function")
-def test_app(db_session: AsyncSession) -> FastAPI:
+def test_app(db_session: AsyncSession) -> Generator[FastAPI, None, None]:
     """Create a test_app with overridden dependencies"""
     _app: FastAPI = create_app()
     _app.dependency_overrides[get_session] = lambda: db_session

@@ -84,7 +84,7 @@ def create_app() -> FastAPI:
         The endpoint creates a new tweet.
         """
         logger.info("Start creating a new tweet")
-        user_id: Optional[models.User] = await q.get_user_id_by_api_key(
+        user_id: Optional[int] = await q.get_user_id_by_api_key(
             session, api_key
         )
         if not user_id:
@@ -100,7 +100,7 @@ def create_app() -> FastAPI:
             )
 
         logger.debug("api_key exists")
-        tweet_id: int = await q.create_tweet(session, user_id[0], tweet.model_dump())
+        tweet_id: int = await q.create_tweet(session, user_id, tweet.model_dump())
         logger.debug("Tweet was created, tweet_id=%d", tweet_id)
         response.status_code = status.HTTP_201_CREATED
         return {"result": "true", "tweet_id": tweet_id}

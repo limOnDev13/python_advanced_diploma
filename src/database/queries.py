@@ -1,9 +1,9 @@
 """The module is responsible for database queries"""
 
 from logging import Logger
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Image, Tweet, User
@@ -47,7 +47,7 @@ async def get_user_id_by_api_key(session: AsyncSession, api_key: str) -> Optiona
     :rtype: Optional[int]
     """
     user = await session.execute(select(User.id).where(User.api_key == api_key))
-    return user.first()
+    return user.scalar()
 
 
 async def create_tweet(session: AsyncSession, user_id: int, tweet_data: Dict) -> int:
@@ -66,12 +66,13 @@ async def create_tweet(session: AsyncSession, user_id: int, tweet_data: Dict) ->
     tweet_data["user_id"] = user_id
     images_ids: Optional[List[int]] = tweet_data.pop("tweet_media_ids")
 
-    images = list()
     # if there are images, we will attach them to the tweet
     if images_ids:
         images_q = await session.execute(select(Image).where(Image.id.in_(images_ids)))
         images = images_q.all()
-    tweet_data["images"] = images
+        tweet_data["images"] = images
+    else:
+        tweet_data['images'] = list()
 
     tweet = Tweet(**tweet_data)
     session.add(tweet)
