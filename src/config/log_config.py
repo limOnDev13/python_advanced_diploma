@@ -3,7 +3,8 @@ dict_config: dict = {
     "disable_existing_loggers": False,
     "formatters": {
         "base": {
-            "format": "%(filename)s | %(funcName)s | %(name)s | %(levelname)s | %(message)s"
+            "format": "%(filename)s | %(funcName)s |"
+                      " %(name)s | %(levelname)s | %(message)s"
         }
     },
     "handlers": {

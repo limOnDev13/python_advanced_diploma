@@ -88,7 +88,7 @@ def create_app() -> FastAPI:
             session, api_key
         )
         if not user_id:
-            logger.warning(f"api_key {api_key} not exists")
+            logger.warning("api_key %s not exists", api_key)
             response.status_code = status.HTTP_403_FORBIDDEN
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -101,7 +101,7 @@ def create_app() -> FastAPI:
 
         logger.debug("api_key exists")
         tweet_id: int = await q.create_tweet(session, user_id[0], tweet.model_dump())
-        logger.debug(f"Tweet was created, tweet_id={tweet_id}")
+        logger.debug("Tweet was created, tweet_id=%d", tweet_id)
         response.status_code = status.HTTP_201_CREATED
         return {"result": "true", "tweet_id": tweet_id}
 
