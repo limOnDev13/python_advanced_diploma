@@ -1,19 +1,18 @@
 from contextlib import asynccontextmanager
-from typing import Optional
 from logging import getLogger
 from logging.config import dictConfig
+from typing import Optional
 
-from fastapi import FastAPI, status, Depends, Response
+import uvicorn
+from fastapi import Depends, FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-import uvicorn
 
-from src.schemas import schemas
-from src.database.models import engine, Base, Session
-from src.database import queries as q
-from src.database import models
 from src.config.log_config import dict_config
-
+from src.database import models
+from src.database import queries as q
+from src.database.models import Base, Session, engine
+from src.schemas import schemas
 
 dictConfig(dict_config)
 logger = getLogger("routes_logger")

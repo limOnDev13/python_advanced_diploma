@@ -2,13 +2,11 @@
 
 from typing import Any
 
-from sqlalchemy import Column, Text, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base, relationship
 
-from src.config.config import load_config, Config
-
+from src.config.config import Config, load_config
 
 config: Config = load_config()
 DB_URL: str = f"postgresql+asyncpg://{config.db.user}:{config.db.password}@0.0.0.0:5432"

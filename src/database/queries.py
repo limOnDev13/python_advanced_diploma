@@ -1,13 +1,12 @@
 """The module is responsible for database queries"""
 
-from typing import Optional, List, Dict
 from logging import Logger
+from typing import Dict, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import User, Image, Tweet
-
+from src.database.models import Image, Tweet, User
 
 logger = Logger("query_logger")
 logger.setLevel("DEBUG")
