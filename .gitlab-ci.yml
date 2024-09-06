@@ -19,11 +19,10 @@ build-app:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
     artifacts:
-        untracked: false
         when: on_success
         expire_in: 1 hour
         paths:
-            - ./
+            - .
     tags:
         - students
 
