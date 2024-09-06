@@ -22,7 +22,7 @@ build-app:
         when: on_success
         expire_in: 1 hour
         paths:
-            - .
+            - .artefacts
     tags:
         - students
 
