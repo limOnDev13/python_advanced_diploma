@@ -6,7 +6,7 @@ from environs import Env
 
 @dataclass
 class DB:
-    admin: str
+    user: str
     password: str
 
 
@@ -18,5 +18,5 @@ class Config:
 def load_config(path: Union[str, None] = None) -> Config:
     env = Env()
     env.read_env(path)
-    return Config(db=DB(admin=env('POSTGRES_USER'),
+    return Config(db=DB(user=env('POSTGRES_USER'),
                         password=env('POSTGRES_PASSWORD')))
