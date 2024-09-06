@@ -49,4 +49,3 @@ mypy:
     stage: test
     script:
         - mypy .
-
