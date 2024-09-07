@@ -12,10 +12,7 @@ stages:
 cache:
     key: pip-cache
     paths:
-        - $CI_PROJECT_DIR/.cache/pip
-
-before_script:
-    - mkdir -p $CI_PROJECT_DIR/.cache/pip
+        - .cache/pip
 
 build-app:
     stage: build
