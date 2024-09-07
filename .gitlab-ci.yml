@@ -21,7 +21,7 @@ build-app:
         POSTGRES_PASSWORD: test_pwd    
     cache:
         paths:
-            - project-venv
+            - /usr/local/bin/
         policy: push
     tags:
         - students
@@ -45,7 +45,7 @@ black:
         - students
     cache:
         paths:
-            - project-venv
+            - /usr/local/bin/
         policy: pull
 
 isort:
@@ -56,7 +56,7 @@ isort:
         - students
     cache:
         paths:
-            - project-venv
+            - /usr/local/bin/
         policy: pull
 
 flake8:
@@ -67,7 +67,7 @@ flake8:
         - students
     cache:
         paths:
-            - project-venv
+            - /usr/local/bin/
         policy: pull
 
 mypy:
@@ -78,5 +78,5 @@ mypy:
         - students
     cache:
         paths:
-            - project-venv
+            - /usr/local/bin/
         policy: pull
