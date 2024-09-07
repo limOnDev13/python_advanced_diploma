@@ -9,6 +9,14 @@ stages:
     - build
     - test
 
+cache:
+    key: pip-cache
+    paths:
+        - $CI_PROJECT_DIR/.cache/pip
+
+before_script:
+    - mkdir -p $CI_PROJECT_DIR/.cache/pip
+
 build-app:
     stage: build
     script:
@@ -32,10 +40,6 @@ pytest:
         - pytest tests
     tags:
         - students
-    cache:
-        paths:
-            - project-venv
-        policy: pull
 
 black:
     stage: test
@@ -43,10 +47,6 @@ black:
         - black --diff --check .
     tags:
         - students
-    cache:
-        paths:
-            - /usr/local/bin/
-        policy: pull
 
 isort:
     stage: test
@@ -54,10 +54,6 @@ isort:
         - isort --check-only --diff --profile black .
     tags:
         - students
-    cache:
-        paths:
-            - /usr/local/bin/
-        policy: pull
 
 flake8:
     stage: test
@@ -65,10 +61,6 @@ flake8:
         - flake8 .
     tags:
         - students
-    cache:
-        paths:
-            - /usr/local/bin/
-        policy: pull
 
 mypy:
     stage: test
@@ -76,7 +68,3 @@ mypy:
         - mypy .
     tags:
         - students
-    cache:
-        paths:
-            - /usr/local/bin/
-        policy: pull
