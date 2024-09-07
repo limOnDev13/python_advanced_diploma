@@ -29,7 +29,7 @@ build-app:
 pytest:
     stage: test
     script:
-        - python3 -m pytest tests
+        - pytest tests
     tags:
         - students
     cache:
@@ -40,7 +40,7 @@ pytest:
 black:
     stage: test
     script:
-        - python3 -m black --diff --check .
+        - black --diff --check .
     tags:
         - students
     cache:
@@ -51,7 +51,7 @@ black:
 isort:
     stage: test
     script:
-        - python3 -m isort --check-only --diff --profile black .
+        - isort --check-only --diff --profile black .
     tags:
         - students
     cache:
@@ -62,7 +62,7 @@ isort:
 flake8:
     stage: test
     script:
-        - python3 -m flake8 .
+        - flake8 .
     tags:
         - students
     cache:
@@ -73,7 +73,7 @@ flake8:
 mypy:
     stage: test
     script:
-        - python3 -m mypy .
+        - mypy .
     tags:
         - students
     cache:
