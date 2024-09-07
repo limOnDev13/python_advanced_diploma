@@ -21,6 +21,7 @@ build-app:
     cache:
         paths:
             - project-venv
+        policy: push
     tags:
         - students
 
@@ -30,6 +31,10 @@ pytest:
         - pytest tests
     tags:
         - students
+    cache:
+        paths:
+            - project-venv
+        policy: pull
 
 black:
     stage: test
@@ -37,6 +42,10 @@ black:
         - black --diff --check .
     tags:
         - students
+    cache:
+        paths:
+            - project-venv
+        policy: pull
 
 isort:
     stage: test
@@ -44,6 +53,10 @@ isort:
         - isort --check-only --diff --profile black .
     tags:
         - students
+    cache:
+        paths:
+            - project-venv
+        policy: pull
 
 flake8:
     stage: test
@@ -51,6 +64,10 @@ flake8:
         - flake8 .
     tags:
         - students
+    cache:
+        paths:
+            - project-venv
+        policy: pull
 
 mypy:
     stage: test
@@ -58,3 +75,7 @@ mypy:
         - mypy .
     tags:
         - students
+    cache:
+        paths:
+            - project-venv
+        policy: pull
