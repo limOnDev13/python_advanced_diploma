@@ -3,61 +3,88 @@ workflow:
         - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
         - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"
 
+image: python:3.12
+
 stages:
     - build
     - test
 
-build-app:
-    stage: build
-    image: python:3.12
-    script:
+default:
+    cache:
+        key: pip-cache
+        paths:
+            - .cache/pip
+        policy: push
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv venv
+        - source venv/bin/activate
         - pip install -r requirements_tests.txt
+    tags:
+        - students
+
+pytest:
+    stage: test
     services:
         - postgres:latest
     variables:
         POSTGRES_DB: test_db
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
-    artifacts:
-        untracked: false
-        when: on_success
-        expire_in: 1 hour
-        paths:
-            - ./
-    tags:
-        - students
-
-pytest:
-    stage: test
     script:
-        - pytest tests
+        - python3 -m pytest tests
     tags:
         - students
 
 black:
     stage: test
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
-        - black --diff --check .
+        - python3 -m black --diff --check .
     tags:
         - students
 
 isort:
     stage: test
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
-        - isort --check-only --diff --profile black .
+        - python3 -m isort --check-only --diff --profile black .
     tags:
         - students
 
 flake8:
     stage: test
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
-        - flake8 .
+        - python3 -m flake8 .
     tags:
         - students
 
 mypy:
     stage: test
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
-        - mypy .
+        - python3 -m mypy .
     tags:
         - students
