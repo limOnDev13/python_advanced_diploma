@@ -22,7 +22,7 @@ build:
     cache:
         key: pip-cache
         paths:
-            - .cache/pip
+            - /usr/local/bin/
     tags:
         - students
 
