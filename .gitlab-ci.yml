@@ -18,8 +18,8 @@ default:
     before_script:
         - python -V
         - pip install virtualenv
-        - virtualenv venv
-        - source venv/bin/activate
+        - virtualenv .venv
+        - source .venv/bin/activate
         - pip install -r requirements_tests.txt
     tags:
         - students
@@ -46,7 +46,8 @@ black:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
     script:
-        - python3 -m black --diff --check .
+        - python3 -m black --diff --check src
+        - python3 -m black --diff --check tests
     tags:
         - students
 
@@ -59,7 +60,8 @@ isort:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
     script:
-        - python3 -m isort --check-only --diff --profile black .
+        - python3 -m isort --check-only --diff --profile black src
+        - python3 -m isort --check-only --diff --profile black tests
     tags:
         - students
 
@@ -72,7 +74,8 @@ flake8:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
     script:
-        - python3 -m flake8 .
+        - python3 -m flake8 src
+        - python3 -m flake8 tests
     tags:
         - students
 
@@ -85,6 +88,7 @@ mypy:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
     script:
-        - python3 -m mypy .
+        - python3 -m mypy src
+        - python3 -m mypy tests
     tags:
         - students
