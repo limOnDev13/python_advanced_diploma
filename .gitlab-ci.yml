@@ -31,6 +31,7 @@ pytest:
     variables:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
+        POSTGRES_HOST: postgres
     script:
         - export PYTHONPATH=$PYTHONPATH:/src
         - python3 -m pytest tests
