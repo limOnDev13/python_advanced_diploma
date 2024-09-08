@@ -9,7 +9,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from src.config.config import Config, load_config
 
 config: Config = load_config()
-DB_URL: str = f"postgresql+asyncpg://{config.db.user}:{config.db.password}@0.0.0.0:5432"
+DB_URL: str = (
+    f"postgresql+asyncpg://"
+    f"{config.db.user}:{config.db.password}@{config.db.host}:5432"
+)
 engine = create_async_engine(DB_URL)
 Session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
