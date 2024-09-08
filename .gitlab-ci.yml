@@ -31,7 +31,7 @@ pytest:
     dependencies:
         - build
     script:
-        - pytest tests
+        - python3 -m pytest tests
     tags:
         - students
 
@@ -40,7 +40,7 @@ black:
     dependencies:
         - build
     script:
-        - black --diff --check .
+        - python3 -m black --diff --check .
     tags:
         - students
 
@@ -49,7 +49,7 @@ isort:
     dependencies:
         - build
     script:
-        - isort --check-only --diff --profile black .
+        - python3 -m isort --check-only --diff --profile black .
     tags:
         - students
 
@@ -58,7 +58,7 @@ flake8:
     dependencies:
         - build
     script:
-        - flake8 .
+        - python3 -m flake8 .
     tags:
         - students
 
@@ -67,6 +67,6 @@ mypy:
     dependencies:
         - build
     script:
-        - mypy .
+        - python3 -m mypy .
     tags:
         - students
