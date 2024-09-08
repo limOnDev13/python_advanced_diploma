@@ -1,12 +1,12 @@
 """The module is responsible for database queries"""
 
 from logging import Logger
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional
 
-from sqlalchemy import select, Row
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Image, Tweet, User
+from .models import Image, Tweet, User
 
 logger = Logger("query_logger")
 logger.setLevel("DEBUG")
@@ -72,7 +72,7 @@ async def create_tweet(session: AsyncSession, user_id: int, tweet_data: Dict) ->
         images = images_q.all()
         tweet_data["images"] = images
     else:
-        tweet_data['images'] = list()
+        tweet_data["images"] = list()
 
     tweet = Tweet(**tweet_data)
     session.add(tweet)

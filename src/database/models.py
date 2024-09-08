@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, relationship, mapped_column, Mapped
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.config.config import Config, load_config
 
@@ -23,7 +23,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     api_key: Mapped[str] = mapped_column(String, unique=True, index=True)
-    tweets: Mapped[List['Tweet']] = relationship(
+    tweets: Mapped[List["Tweet"]] = relationship(
         "Tweet",
         back_populates="user",
         lazy="joined",
@@ -40,8 +40,10 @@ class Tweet(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     tweet_data: Mapped[str] = mapped_column(Text, nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    user: Mapped['User'] = relationship("User", back_populates="tweets")
-    images: Mapped[Optional[List['Image']]] = relationship("Image", lazy="joined", cascade="all, delete, delete-orphan")
+    user: Mapped["User"] = relationship("User", back_populates="tweets")
+    images: Mapped[Optional[List["Image"]]] = relationship(
+        "Image", lazy="joined", cascade="all, delete, delete-orphan"
+    )
 
 
 class Image(Base):

@@ -8,11 +8,10 @@ from fastapi import Depends, FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.log_config import dict_config
-from src.database import models
-from src.database import queries as q
-from src.database.models import Base, Session, engine
-from src.schemas import schemas
+from config.log_config import dict_config
+from database import queries as q
+from database.models import Base, Session, engine
+from schemas import schemas
 
 dictConfig(dict_config)
 logger = getLogger("routes_logger")
@@ -84,9 +83,7 @@ def create_app() -> FastAPI:
         The endpoint creates a new tweet.
         """
         logger.info("Start creating a new tweet")
-        user_id: Optional[int] = await q.get_user_id_by_api_key(
-            session, api_key
-        )
+        user_id: Optional[int] = await q.get_user_id_by_api_key(session, api_key)
         if not user_id:
             logger.warning("api_key %s not exists", api_key)
             response.status_code = status.HTTP_403_FORBIDDEN
