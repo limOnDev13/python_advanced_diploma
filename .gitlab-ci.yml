@@ -9,33 +9,29 @@ stages:
     - build
     - test
 
-build:
-    stage: build
-    script:
+default:
+    cache:
+        key: pip-cache
+        paths:
+            - .cache/pip
+        policy: push
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv venv
+        - source venv/bin/activate
         - pip install -r requirements_tests.txt
+    tags:
+        - students
+
+pytest:
+    stage: test
     services:
         - postgres:latest
     variables:
         POSTGRES_DB: test_db
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
-    cache:
-        key: pip-cache
-        paths:
-            - /usr/local/bin/
-        policy: push
-    tags:
-        - students
-
-pytest:
-    stage: test
-    dependencies:
-        - build
-    cache:
-        key: pip-cache
-        paths:
-            - /usr/local/bin/
-        policy: pull
     script:
         - python3 -m pytest tests
     tags:
@@ -43,13 +39,12 @@ pytest:
 
 black:
     stage: test
-    dependencies:
-        - build
-    cache:
-        key: pip-cache
-        paths:
-            - /usr/local/bin/
-        policy: pull
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
         - python3 -m black --diff --check .
     tags:
@@ -57,13 +52,12 @@ black:
 
 isort:
     stage: test
-    dependencies:
-        - build
-    cache:
-        key: pip-cache
-        paths:
-            - /usr/local/bin/
-        policy: pull
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
         - python3 -m isort --check-only --diff --profile black .
     tags:
@@ -71,13 +65,12 @@ isort:
 
 flake8:
     stage: test
-    dependencies:
-        - build
-    cache:
-        key: pip-cache
-        paths:
-            - /usr/local/bin/
-        policy: pull
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
         - python3 -m flake8 .
     tags:
@@ -85,13 +78,12 @@ flake8:
 
 mypy:
     stage: test
-    dependencies:
-        - build
-    cache:
-        key: pip-cache
-        paths:
-            - /usr/local/bin/
-        policy: pull
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
     script:
         - python3 -m mypy .
     tags:
