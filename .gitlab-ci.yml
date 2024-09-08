@@ -14,7 +14,7 @@ cache:
     paths:
         - .cache/pip
 
-build-app:
+build:
     stage: build
     script:
         - pip install -r requirements_tests.txt
@@ -23,16 +23,14 @@ build-app:
     variables:
         POSTGRES_DB: test_db
         POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_pwd    
-    cache:
-        paths:
-            - /usr/local/bin/
-        policy: push
+        POSTGRES_PASSWORD: test_pwd
     tags:
         - students
 
 pytest:
     stage: test
+    dependencies:
+        - build
     script:
         - pytest tests
     tags:
@@ -40,6 +38,8 @@ pytest:
 
 black:
     stage: test
+    dependencies:
+        - build
     script:
         - black --diff --check .
     tags:
@@ -47,6 +47,8 @@ black:
 
 isort:
     stage: test
+    dependencies:
+        - build
     script:
         - isort --check-only --diff --profile black .
     tags:
@@ -54,6 +56,8 @@ isort:
 
 flake8:
     stage: test
+    dependencies:
+        - build
     script:
         - flake8 .
     tags:
@@ -61,6 +65,8 @@ flake8:
 
 mypy:
     stage: test
+    dependencies:
+        - build
     script:
         - mypy .
     tags:
