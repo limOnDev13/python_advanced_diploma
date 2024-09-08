@@ -3,32 +3,37 @@ workflow:
         - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
         - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"
 
+image: python:3.12
+
 stages:
     - build
     - test
 
-build-app:
-    stage: build
-    image: python:3.12
-    script:
-        - pip install -r requirements_tests.txt
-    services:
-        - postgres:latest
-    variables:
-        POSTGRES_DB: test_db
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_pwd
-    artifacts:
-        when: on_success
-        expire_in: 1 hour
+default:
+    cache:
+        key: pip-cache
         paths:
-            - .artefacts/
+            - .cache/pip
+        policy: push
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv .venv
+        - source .venv/bin/activate
+        - pip install -r requirements_tests.txt
     tags:
         - students
 
 pytest:
     stage: test
+    services:
+        - postgres:latest
+    variables:
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_pwd
+        POSTGRES_HOST: postgres
     script:
+        - export PYTHONPATH=$PYTHONPATH:/src
         - python3 -m pytest tests
     tags:
         - students
@@ -36,27 +41,31 @@ pytest:
 black:
     stage: test
     script:
-        - python3 -m black --diff --check .
+        - python3 -m black --diff --check src
+        - python3 -m black --diff --check tests
     tags:
         - students
 
 isort:
     stage: test
     script:
-        - python3 -m isort --check-only --diff --profile black .
+        - python3 -m isort --check-only --diff --profile black src
+        - python3 -m isort --check-only --diff --profile black tests
     tags:
         - students
 
 flake8:
     stage: test
     script:
-        - python3 -m flake8 .
+        - python3 -m flake8 src
+        - python3 -m flake8 tests
     tags:
         - students
 
 mypy:
     stage: test
     script:
-        - python3 -m mypy .
+        - python3 -m mypy src
+        - python3 -m mypy tests
     tags:
         - students
