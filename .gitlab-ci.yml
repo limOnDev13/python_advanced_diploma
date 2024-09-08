@@ -21,6 +21,7 @@ default:
         - virtualenv .venv
         - source .venv/bin/activate
         - pip install -r requirements_tests.txt
+        - export PYTHONPATH=$PYTHONPATH:/src
     tags:
         - students
 
