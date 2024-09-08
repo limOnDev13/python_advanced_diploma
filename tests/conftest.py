@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from ..src.database.models import DB_URL, Base, User
-from ..src.routes import create_app, get_session
+from src.database.models import DB_URL, Base, User
+from src.routes import create_app, get_session
 
 
 @pytest_asyncio.fixture(scope="function")
