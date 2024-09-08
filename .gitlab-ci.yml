@@ -23,6 +23,7 @@ build:
         key: pip-cache
         paths:
             - /usr/local/bin/
+        policy: push
     tags:
         - students
 
@@ -30,6 +31,11 @@ pytest:
     stage: test
     dependencies:
         - build
+    cache:
+        key: pip-cache
+        paths:
+            - /usr/local/bin/
+        policy: pull
     script:
         - python3 -m pytest tests
     tags:
@@ -39,6 +45,11 @@ black:
     stage: test
     dependencies:
         - build
+    cache:
+        key: pip-cache
+        paths:
+            - /usr/local/bin/
+        policy: pull
     script:
         - python3 -m black --diff --check .
     tags:
@@ -48,6 +59,11 @@ isort:
     stage: test
     dependencies:
         - build
+    cache:
+        key: pip-cache
+        paths:
+            - /usr/local/bin/
+        policy: pull
     script:
         - python3 -m isort --check-only --diff --profile black .
     tags:
@@ -57,6 +73,11 @@ flake8:
     stage: test
     dependencies:
         - build
+    cache:
+        key: pip-cache
+        paths:
+            - /usr/local/bin/
+        policy: pull
     script:
         - python3 -m flake8 .
     tags:
@@ -66,6 +87,11 @@ mypy:
     stage: test
     dependencies:
         - build
+    cache:
+        key: pip-cache
+        paths:
+            - /usr/local/bin/
+        policy: pull
     script:
         - python3 -m mypy .
     tags:
