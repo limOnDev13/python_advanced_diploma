@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.log_config import dict_config
 from database import queries as q
 from database.models import Base, Session, engine
-from schemas import schemas
+
+from .schemas import schemas
 
 dictConfig(dict_config)
 logger = getLogger("routes_logger")
