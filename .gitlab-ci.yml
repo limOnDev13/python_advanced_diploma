@@ -9,11 +9,6 @@ stages:
     - build
     - test
 
-cache:
-    key: pip-cache
-    paths:
-        - .cache/pip
-
 build:
     stage: build
     script:
@@ -25,7 +20,9 @@ build:
         POSTGRES_USER: test_user
         POSTGRES_PASSWORD: test_pwd
     cache:
-        - path: .cache
+        key: pip-cache
+        paths:
+            - .cache/pip
     tags:
         - students
 
