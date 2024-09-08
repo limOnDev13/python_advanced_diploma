@@ -8,9 +8,9 @@ from fastapi import Depends, FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config.log_config import dict_config
-from database import queries as q
-from database.models import Base, Session, engine
+from .config.log_config import dict_config
+from .database import queries as q
+from .database.models import Base, Session, engine
 
 from .schemas import schemas
 
