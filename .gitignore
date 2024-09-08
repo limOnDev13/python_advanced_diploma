@@ -1,1 +1,6 @@
 /.idea/
+/.venv/
+src/.env
+/src/db/
+/.venv_test/
+/tests/db/
