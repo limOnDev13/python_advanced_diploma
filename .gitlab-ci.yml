@@ -6,26 +6,17 @@ workflow:
 image: python:3.12
 
 stages:
-    - build
     - test
+    - deploy
 
-default:
-    cache:
-        key: pip-cache
-        paths:
-            - .cache/pip
-        policy: push
+pytest:
+    stage: test
     before_script:
         - python -V
         - pip install virtualenv
         - virtualenv .venv
         - source .venv/bin/activate
         - pip install -r requirements_tests.txt
-    tags:
-        - students
-
-pytest:
-    stage: test
     services:
         - postgres:latest
     variables:
@@ -40,6 +31,12 @@ pytest:
 
 black:
     stage: test
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv .venv
+        - source .venv/bin/activate
+        - pip install -r requirements_tests.txt
     script:
         - python3 -m black --diff --check src
         - python3 -m black --diff --check tests
@@ -48,6 +45,12 @@ black:
 
 isort:
     stage: test
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv .venv
+        - source .venv/bin/activate
+        - pip install -r requirements_tests.txt
     script:
         - python3 -m isort --check-only --diff --profile black src
         - python3 -m isort --check-only --diff --profile black tests
@@ -55,6 +58,12 @@ isort:
         - students
 
 flake8:
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv .venv
+        - source .venv/bin/activate
+        - pip install -r requirements_tests.txt
     stage: test
     script:
         - python3 -m flake8 src
@@ -63,9 +72,27 @@ flake8:
         - students
 
 mypy:
+    before_script:
+        - python -V
+        - pip install virtualenv
+        - virtualenv .venv
+        - source .venv/bin/activate
+        - pip install -r requirements_tests.txt
     stage: test
     script:
         - python3 -m mypy src
         - python3 -m mypy tests
     tags:
         - students
+
+deploy_to_prod:
+    stage: deploy
+    before_script:
+        - pip install -r requirements.txt
+    script:
+        - pip install fabric
+        - fab deploy
+    tags:
+        - students
+    only:
+        - master
