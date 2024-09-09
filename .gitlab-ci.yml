@@ -88,7 +88,7 @@ mypy:
 deploy_to_prod:
     stage: deploy
     before_script:
-        - pip install -r requirements.txt
+        - pip install -r ./src/requirements.txt
     script:
         - pip install fabric
         - fab deploy
