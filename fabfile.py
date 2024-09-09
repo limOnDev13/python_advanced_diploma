@@ -12,7 +12,10 @@ def deploy(ctx):
     ) as c:
         with c.cd("/src"):
             c.run("docker compose down")
+            c.run("echo 'After docker compose down'")
             c.run("git pull origin master --recurse-submodules --rebase")
+            c.run("echo 'After pull'")
             c.run("docker compose build")
+            c.run("echo 'After docker compose build'")
             c.run("docker compose up")
 
