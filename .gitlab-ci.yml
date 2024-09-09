@@ -94,3 +94,5 @@ deploy_to_prod:
         - fab deploy
     only:
         - master
+    tags:
+        - students
