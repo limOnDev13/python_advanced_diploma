@@ -1,4 +1,4 @@
-from fabric import task, Connection
+from fabric import Connection, task
 
 
 @task
