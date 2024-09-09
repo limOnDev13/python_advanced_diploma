@@ -92,7 +92,7 @@ deploy_to_prod:
     script:
         - pip install fabric
         - fab deploy
-    tags:
-        - students
     only:
         - master
+    tags:
+        - students
