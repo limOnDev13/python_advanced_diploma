@@ -1,16 +1,18 @@
+import os
+
 from fabric import Connection, task
 
 
 @task
 def deploy(ctx):
     with Connection(
-        "10.130.0.32",
-        user="volosnikovvs",
-        connect_kwargs={"key_filename": "./sshkeys/yandexcloud"}
+        os.environ["EC2_HOST"],
+        user=os.environ["EC2_USER"],
+        connect_kwargs={"key_filename": os.environ["EC2_PRIVATE_KEY"]}
     ) as c:
-        with c.cd("/home/ec2-user/automated-deployment"):
+        with c.cd("/src"):
             c.run("docker compose down")
-            c.run("git pull origin master --rebase")
+            c.run("git pull origin master --recurse-submodules --rebase")
             c.run("docker compose build")
             c.run("docker compose up")
 
