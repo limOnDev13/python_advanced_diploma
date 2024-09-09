@@ -8,7 +8,8 @@ def deploy(ctx):
     with Connection(
         os.environ["EC2_HOST"],
         user=os.environ["EC2_USER"],
-        connect_kwargs={"pkey": os.environ["EC2_PRIVATE_KEY"]}
+        connect_kwargs={"key_filename": os.environ["EC2_PRIVATE_KEY"],
+                        "passphrase": os.environ["EC2_PASSPHRASE"]}
     ) as c:
         with c.cd("python_advanced_diploma"):
             c.run("echo 1")
