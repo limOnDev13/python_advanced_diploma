@@ -10,7 +10,7 @@ def deploy(ctx):
         user=os.environ["EC2_USER"],
         connect_kwargs={"key_filename": os.environ["EC2_PRIVATE_KEY"]}
     ) as c:
-        with c.cd("/src"):
+        with c.cd("."):
             c.run("docker compose down")
             c.run("echo 'After docker compose down'")
             c.run("git pull origin master --recurse-submodules --rebase")
