@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:13.3
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=localhost
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./db/:/var/lib/postgresql/data
+  web:
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=postgres
+    build: ./src
+    ports:
+      - "8000:8000"
