@@ -96,7 +96,7 @@ deploy_to_prod:
         - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         - chmod 644 ~/.ssh/known_hosts
     script:
-        - ssh -v $DEPLOY_USER@$DEPLOY_HOST " cd ~; eval $(ssh-agent -s) ssh-add .ssh/gitlab; cd python_advanced_diploma; docker compose down; git pull; export POSTGRES_USER=$POSTGRES_USER; export POSTGRES_PASSWORD=$POSTGRES_PASSWORD; docker compose up --detach"
+        - ssh -v $DEPLOY_USER@$DEPLOY_HOST "cd python_advanced_diploma; docker compose down; eval $(ssh-agent -s) ssh-add ~/.ssh/gitlab; git pull; export POSTGRES_USER=$POSTGRES_USER; export POSTGRES_PASSWORD=$POSTGRES_PASSWORD; docker compose up --detach"
     tags:
         - students
     only:
