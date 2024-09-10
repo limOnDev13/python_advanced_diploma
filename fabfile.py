@@ -8,14 +8,14 @@ def deploy(ctx):
     with Connection(
         os.environ["EC2_HOST"],
         user=os.environ["EC2_USER"],
-        connect_kwargs={"pkey": os.environ["EC2_PRIVATE_KEY"],
+        connect_kwargs={"key_filename": os.environ["EC2_PRIVATE_KEY"],
                         "passphrase": os.environ["EC2_PASSPHRASE"]}
     ) as c:
         with c.cd("python_advanced_diploma"):
             c.run("echo 1")
             c.run('eval "$(ssh-agent -s)"')
             c.run("echo 1.1")
-            c.run("ssh-add ~/.sshkeys/gitlab")
+            c.run("ssh-add ~/.sshkeys/cicd")
             c.run("echo 1.2")
             c.run("docker compose down")
             c.run("echo 2")
