@@ -20,8 +20,8 @@ pytest:
     services:
         - postgres:latest
     variables:
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_pwd
+        POSTGRES_USER: $POSTGRES_USER
+        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
         POSTGRES_HOST: postgres
     script:
         - export PYTHONPATH=$PYTHONPATH:/src
@@ -87,9 +87,16 @@ mypy:
 
 deploy_to_prod:
     stage: deploy
+    before_script:
+        - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+        - eval $(ssh-agent -s)
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        - chmod 644 ~/.ssh/known_hosts
     script:
-        - pip install fabric
-        - fab deploy
+        - ssh -v $DEPLOY_USER@$DEPLOY_HOST "cd python_advanced_diploma; docker compose down; eval $(ssh-agent -s) ssh-add gitlab; git pull; export POSTGRES_USER=$POSTGRES_USER; export POSTGRES_PASSWORD=$POSTGRES_PASSWORD; docker compose up"
     tags:
         - students
     only:
