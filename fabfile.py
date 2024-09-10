@@ -11,6 +11,8 @@ def deploy(ctx):
         connect_kwargs={"key_filename": os.environ["EC2_PRIVATE_KEY"],
                         "passphrase": os.environ["EC2_PASSPHRASE"]}
     ) as c:
+        with c.cd("~"):
+            c.run('ls -a')
         with c.cd("python_advanced_diploma"):
             c.run("echo 1")
             c.run('eval "$(ssh-agent -s)"')
