@@ -12,7 +12,9 @@ def deploy(ctx):
                         "passphrase": os.environ["EC2_PASSPHRASE"]}
     ) as c:
         with c.cd("~"):
+            c.run("echo -----------------------------------------------------------------")
             c.run('ls -a')
+            c.run("echo -----------------------------------------------------------------")
         with c.cd("python_advanced_diploma"):
             c.run("echo 1")
             c.run('eval "$(ssh-agent -s)"')
