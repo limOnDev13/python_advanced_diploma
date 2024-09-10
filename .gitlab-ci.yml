@@ -96,7 +96,7 @@ deploy_to_prod:
         - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         - chmod 644 ~/.ssh/known_hosts
     script:
-        - ssh -v $DEPLOY_USER@$DEPLOY_HOST "cd '$DEPLOY_PATH'; docker compose down; git pull; docker compose up
+        - ssh -v $DEPLOY_USER@$DEPLOY_HOST "cd '$DEPLOY_PATH'; docker compose down; git pull; docker compose up"
     tags:
         - students
     only:
