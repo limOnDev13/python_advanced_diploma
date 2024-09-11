@@ -79,3 +79,18 @@ async def create_tweet(session: AsyncSession, user_id: int, tweet_data: Dict) ->
     await session.commit()
 
     return tweet.id
+
+
+async def add_image(session: AsyncSession) -> int:
+    """
+    Function for adding information about an image.
+    For now, it adds an empty string. Returns the image id
+    :param session: session object
+    :return: image id
+    :rtype: int
+    """
+    logger.info("Start adding image")
+    image = Image()
+    session.add(image)
+    await session.commit()
+    return image.id
