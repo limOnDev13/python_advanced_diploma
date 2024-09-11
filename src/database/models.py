@@ -53,4 +53,4 @@ class Image(Base):
     __tablename__ = "images"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    tweet_id: Mapped[int] = mapped_column(Integer, ForeignKey("tweets.id"))
+    tweet_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("tweets.id"), nullable=True)
