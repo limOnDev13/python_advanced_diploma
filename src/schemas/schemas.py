@@ -17,11 +17,3 @@ class Tweet(BaseModel):
         "automatically when sending a tweet and"
         " substitute the id from there in json.",
     )
-
-
-def get_error_dict(exc: Exception):
-    return {
-        "result": False,
-        "error_type": type(exc).__name__,
-        "error_message": exc.__repr__(),
-    }
