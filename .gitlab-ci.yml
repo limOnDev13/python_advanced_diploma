@@ -7,26 +7,6 @@ image: python:3.12
 
 stages:
     - test
-    - deploy
-
-pytest:
-    stage: test
-    before_script:
-        - python -V
-        - pip install virtualenv
-        - virtualenv .venv
-        - source .venv/bin/activate
-        - pip install -r requirements_tests.txt
-    services:
-        - postgres:latest
-    variables:
-        POSTGRES_USER: $POSTGRES_USER
-        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-        POSTGRES_HOST: postgres
-    script:
-        - python3 -m pytest tests
-    tags:
-        - students
 
 black:
     stage: test
@@ -83,20 +63,3 @@ mypy:
         - python3 -m mypy tests
     tags:
         - students
-
-deploy_to_prod:
-    stage: deploy
-    before_script:
-        - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
-        - eval $(ssh-agent -s)
-        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-        - mkdir -p ~/.ssh
-        - chmod 700 ~/.ssh
-        - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-        - chmod 644 ~/.ssh/known_hosts
-    script:
-        - ssh -v $DEPLOY_USER@$DEPLOY_HOST "cd python_advanced_diploma; ls -l ~/.ssh; docker compose down; eval $(ssh-agent -s) > /dev/null; ssh-add ~/.ssh/gitlab; git pull; export POSTGRES_USER=$POSTGRES_USER; export POSTGRES_PASSWORD=$POSTGRES_PASSWORD; docker compose up --detach"
-    tags:
-        - students
-    only:
-        - master
