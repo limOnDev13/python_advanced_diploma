@@ -1,6 +1,6 @@
 import uvicorn
 
-from api import routes
+from src.api import routes
 
 if __name__ == "__main__":
     app = routes.create_app()
