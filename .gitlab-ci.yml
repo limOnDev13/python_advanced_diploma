@@ -22,7 +22,7 @@ pytest:
     variables:
         POSTGRES_USER: $POSTGRES_USER
         POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-        POSTGRES_HOST: postgres
+        POSTGRES_HOST: localhost
     script:
         - export PYTHONPATH=$PYTHONPATH:/src
         - python3 -m pytest tests
