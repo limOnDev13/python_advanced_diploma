@@ -1,6 +1,6 @@
 workflow:
     rules:
-        - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+        - if: $CI_COMMIT_BRANCH == "master"
         - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"
 
 image: python:3.12
@@ -24,7 +24,6 @@ pytest:
         POSTGRES_PASSWORD: $POSTGRES_PASSWORD
         POSTGRES_HOST: postgres
     script:
-        - export PYTHONPATH=$PYTHONPATH:/src
         - python3 -m pytest tests
     tags:
         - students
