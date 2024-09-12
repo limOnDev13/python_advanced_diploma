@@ -1,7 +1,7 @@
 """The module is responsible for database queries"""
 
 from logging import Logger
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,14 +67,12 @@ async def create_tweet(session: AsyncSession, user_id: int, tweet_data: Dict) ->
     images_ids: Optional[List[int]] = tweet_data.pop("tweet_media_ids")
 
     # if there are images, we will attach them to the tweet
+    images: Sequence[Image] = list()
     if images_ids:
-        images_q = await session.execute(select(Image).where(Image.id.in_(images_ids)))
-        images = images_q.all()
-        tweet_data["images"] = images
-    else:
-        tweet_data["images"] = list()
+        images = await get_images_by_ids(session, images_ids)
 
     tweet = Tweet(**tweet_data)
+    tweet.images = list(images)
     session.add(tweet)
     await session.commit()
 
@@ -94,3 +92,24 @@ async def add_image(session: AsyncSession) -> int:
     session.add(image)
     await session.commit()
     return image.id
+
+
+async def get_images_by_ids(
+    session: AsyncSession, images_ids: List[int]
+) -> Sequence[Image]:
+    """
+    The function returns an image row by id
+    :param session: session object
+    :param images_ids: List of images ids
+    :type images_ids: List[int]
+    :return: List of objects Images
+    :rtype: Result[tuple[Image]]
+    """
+    images_q = await session.execute(select(Image).where(Image.id.in_(images_ids)))
+    return images_q.scalars().all()
+
+
+async def get_all_images_ids(session: AsyncSession) -> List[int]:
+    """Function return all images ids"""
+    images_q = await session.execute(select(Image.id))
+    return [image_row[0] for image_row in images_q.all()]
