@@ -6,8 +6,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
-from src.config.config import load_config, DB
+from src.config.config import DB, load_config
 from src.database.models import Base
 
 # this is the Alembic Config object, which provides
@@ -16,7 +15,7 @@ config = context.config
 db_config: DB = load_config().db
 config.set_main_option(
     "sqlalchemy.url",
-    f"postgresql+asyncpg://{db_config.user}:{db_config.password}@{db_config.host}"
+    f"postgresql+asyncpg://{db_config.user}:{db_config.password}@{db_config.host}",
 )
 
 # Interpret the config file for Python logging.
