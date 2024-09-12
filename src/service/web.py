@@ -1,15 +1,14 @@
-from typing import Optional
-from logging import getLogger
 from contextlib import asynccontextmanager
+from logging import getLogger
+from typing import Optional
 
-from fastapi import Response, FastAPI, status
+from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from fastapi_exceptions.exceptions import AuthenticationFailed
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Base, Session, engine
 from src.database import queries as q
-
+from src.database.models import Base, Session, engine
 
 logger = getLogger("routes_logger")
 
@@ -56,23 +55,28 @@ def json_response_with_error(exc: Exception, status_code: int = 400) -> JSONResp
         content={
             "result": False,
             "error_type": type(exc).__name__,
-            "error_message": str(exc)
-        }
+            "error_message": str(exc),
+        },
     )
 
 
-async def check_api_key(api_key: str, session: AsyncSession, response: Response) -> int | JSONResponse:
+async def check_api_key(
+    api_key: str, session: AsyncSession, response: Response
+) -> int | JSONResponse:
     """
     The function checks if the given api_key is in the database.
     :param api_key: The key is the user ID
     :param session: session object
     :param response: object of the response
-    :return: user_id (int) if api_key is in the database, otherwise JSONResponse with an identification error response
+    :return: user_id (int) if api_key is in the database,
+    otherwise JSONResponse with an identification error response
     :rtype: int | JSONResponse
     """
     user_id: Optional[int] = await q.get_user_id_by_api_key(session, api_key)
     if not user_id:
         logger.warning("api_key %s not exists", api_key)
-        response.status_code = status.HTTP_403_FORBIDDEN
-        return json_response_with_error(AuthenticationFailed(f"api_key {api_key} not exists"))
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return json_response_with_error(
+            AuthenticationFailed(f"api_key {api_key} not exists"), 401
+        )
     return user_id
