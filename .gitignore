@@ -6,3 +6,5 @@ src/.env
 /tests/db/
 /.sshkeys/
 /.env
+# ignore local images
+/src/static/images/*
