@@ -3,7 +3,7 @@
 from logging import Logger
 from typing import Dict, List, Optional, Sequence
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import Image, Tweet, User
@@ -118,12 +118,15 @@ async def get_all_images_ids(session: AsyncSession) -> List[int]:
 async def get_tweet_by_id(session: AsyncSession, tweet_id: int) -> Optional[Tweet]:
     """Function returns tweet by id"""
     get_tweet_q = await session.execute(select(Tweet).where(Tweet.id == tweet_id))
-    return get_tweet_q.first()
+    return get_tweet_q.scalar_one_or_none()
 
-
-async def get_images_ids_by_tweet_id(session: AsyncSession, tweet_id: int) -> Optional[List[int]]:
+async def get_images_ids_by_tweet_id(
+    session: AsyncSession, tweet_id: int
+) -> Optional[List[int]]:
     """Function returns list image ids by tweet_id"""
-    images_ids_q = await session.execute(select(Image.id).where(Image.tweet_id == tweet_id))
+    images_ids_q = await session.execute(
+        select(Image.id).where(Image.tweet_id == tweet_id)
+    )
     return [image_row[0] for image_row in images_ids_q.all()]
 
 

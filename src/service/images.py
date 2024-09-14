@@ -1,12 +1,12 @@
+import asyncio
 import os
 import re
-from typing import List, Optional, Awaitable
-import asyncio
+from typing import Awaitable, List, Optional
 
-from fastapi import UploadFile
-from sqlalchemy.ext.asyncio import AsyncSession
 import aiofiles
 import aiofiles.os
+from fastapi import UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.queries import add_image, get_images_by_ids
 
@@ -104,5 +104,7 @@ async def delete_images_by_ids(images_ids: List[int]) -> None:
     cur_dir_path: str = os.path.dirname(__file__)
     images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
     images_paths: List[str] = [f"{images_path}/{image_id}.*" for image_id in images_ids]
-    delete_images_c: List[Awaitable] = [aiofiles.os.remove(path) for path in images_paths]
+    delete_images_c: List[Awaitable] = [
+        aiofiles.os.remove(path) for path in images_paths
+    ]
     await asyncio.gather(*delete_images_c)

@@ -1,6 +1,6 @@
 from logging import getLogger
 from logging.config import dictConfig
-from typing import Optional, List
+from typing import List, Optional
 
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.responses import JSONResponse
@@ -9,14 +9,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.log_config import dict_config
 from src.database import queries as q
 from src.schemas import schemas
-from src.service.images import (upload_image, validate_image, validate_images_in_db,
-                                delete_images_by_ids)
+from src.service.images import (
+    delete_images_by_ids,
+    upload_image,
+    validate_image,
+    validate_images_in_db,
+)
 from src.service.web import (
     check_api_key,
+    check_tweet_id,
     get_session,
     json_response_with_error,
     lifespan,
-    check_tweet_id
 )
 
 dictConfig(dict_config)
@@ -123,17 +127,15 @@ def create_app() -> FastAPI:
             },
             200: {
                 "description": "Tweet was deleted",
-                "content": {
-                    "application/json": {"example": {"result": True}}
-                },
+                "content": {"application/json": {"example": {"result": True}}},
             },
         },
     )
     async def delete_tweet(
-            api_key: str,
-            tweet_id: int,
-            response: Response,
-            session: AsyncSession = Depends(get_session),
+        api_key: str,
+        tweet_id: int,
+        response: Response,
+        session: AsyncSession = Depends(get_session),
     ):
         """
         The endpoint deletes the tweet by id
@@ -155,17 +157,18 @@ def create_app() -> FastAPI:
         logger.debug("tweet_id was found")
 
         # get images ids which relate this tweet
-        images_ids: List[int] = await q.get_images_ids_by_tweet_id(session, tweet_id)
-        logger.debug(f'List of images ids: {images_ids}')
+        images_ids: Optional[List[int]] = await q.get_images_ids_by_tweet_id(session, tweet_id)
+        logger.debug("List of images ids: %s", str(images_ids))
         # delete tweet and images from db
         await q.delete_tweet_by_id(session, tweet_id)
         logger.debug("Tweet and images were deleted from db")
+
         # delete images from disk
-        await delete_images_by_ids(images_ids)
-        logger.debug("Images were deleted from disk")
+        if images_ids:
+            await delete_images_by_ids(images_ids)
+            logger.debug("Images were deleted from disk")
 
         return {"result": True}
-
 
     @app.post(
         "/api/medias",

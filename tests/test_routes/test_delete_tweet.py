@@ -1,10 +1,6 @@
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.database.queries import get_all_images_ids, get_images_by_ids
-from tests.test_routes.test_upload_image import BASE_ROUTE, TEST_IMAGE_PATH
 
 
 @pytest.mark.asyncio
@@ -18,5 +14,5 @@ async def test_delete_tweet(client, user_data: Tuple[int, str]) -> None:
     tweet_id: int = response.json()["tweet_id"]
 
     # delete this tweet
-    response = await client.delete(f"/api/tweets?api_key={api_key}")
+    response = await client.delete(f"/api/tweets/{tweet_id}?api_key={api_key}")
     assert response.status_code == 200
