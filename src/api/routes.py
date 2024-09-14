@@ -1,5 +1,6 @@
 from logging import getLogger
 from logging.config import dictConfig
+from typing import Optional, List
 
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.responses import JSONResponse
@@ -8,12 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.log_config import dict_config
 from src.database import queries as q
 from src.schemas import schemas
-from src.service.images import upload_image, validate_image, validate_images_in_db
+from src.service.images import (upload_image, validate_image, validate_images_in_db,
+                                delete_images_by_ids)
 from src.service.web import (
     check_api_key,
     get_session,
     json_response_with_error,
     lifespan,
+    check_tweet_id
 )
 
 dictConfig(dict_config)
@@ -89,6 +92,80 @@ def create_app() -> FastAPI:
         logger.debug("Tweet was created, tweet_id=%d", tweet_id)
         response.status_code = status.HTTP_201_CREATED
         return {"result": "true", "tweet_id": tweet_id}
+
+    @app.delete(
+        "/api/tweets/{tweet_id}",
+        status_code=200,
+        responses={
+            401: {
+                "description": "api_key not exists",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "result": False,
+                            "error_type": "AuthenticationFailed",
+                            "error_message": "api_key <api_key> not exists",
+                        }
+                    }
+                },
+            },
+            404: {
+                "description": "Tweet not found",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "result": False,
+                            "error_type": "NotFound",
+                            "error_message": "tweet_id {tweet_id} not found",
+                        }
+                    }
+                },
+            },
+            200: {
+                "description": "Tweet was deleted",
+                "content": {
+                    "application/json": {"example": {"result": True}}
+                },
+            },
+        },
+    )
+    async def delete_tweet(
+            api_key: str,
+            tweet_id: int,
+            response: Response,
+            session: AsyncSession = Depends(get_session),
+    ):
+        """
+        The endpoint deletes the tweet by id
+        """
+        logger.info("Start deleting the tweet")
+        user_id: int | JSONResponse = await check_api_key(api_key, session, response)
+        # if api_key is in the database, the function will return user_id,
+        # otherwise it will return JSON Response - we will return it immediately
+        if not isinstance(user_id, int):
+            logger.warning("api_key not found")
+            return user_id
+        logger.debug("Identification is successful")
+
+        # check tweet_id
+        result: Optional[JSONResponse] = await check_tweet_id(tweet_id, session)
+        if result:
+            logger.warning("tweet_id not found")
+            return result
+        logger.debug("tweet_id was found")
+
+        # get images ids which relate this tweet
+        images_ids: List[int] = await q.get_images_ids_by_tweet_id(session, tweet_id)
+        logger.debug(f'List of images ids: {images_ids}')
+        # delete tweet and images from db
+        await q.delete_tweet_by_id(session, tweet_id)
+        logger.debug("Tweet and images were deleted from db")
+        # delete images from disk
+        await delete_images_by_ids(images_ids)
+        logger.debug("Images were deleted from disk")
+
+        return {"result": True}
+
 
     @app.post(
         "/api/medias",
