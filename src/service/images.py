@@ -1,10 +1,12 @@
 import os
 import re
-from typing import List, Optional
+from typing import List, Optional, Awaitable
+import asyncio
 
 from fastapi import UploadFile
-from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
+import aiofiles
+import aiofiles.os
 
 from src.database.queries import add_image, get_images_by_ids
 
@@ -33,16 +35,20 @@ async def upload_image(image_file: UploadFile, session: AsyncSession) -> int:
     :return: Image id
     :rtype: int
     """
-    with Image.open(image_file.file) as image:
-        img_extension: Optional[str] = _file_extension(image_file.filename)
-        image_id: int = await add_image(session)
-        cur_dir_path: str = os.path.dirname(__file__)
-        images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
-        if not img_extension:
-            image.save(f"{images_path}/{image_id}")
-        else:
-            image.save(f"{images_path}/{image_id}.{img_extension}")
-        return image_id
+    img_extension: Optional[str] = _file_extension(image_file.filename)
+    image_id: int = await add_image(session)
+    cur_dir_path: str = os.path.dirname(__file__)
+    images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
+
+    if not img_extension:
+        out_file_path = f"{images_path}/{image_id}"
+    else:
+        out_file_path = f"{images_path}/{image_id}.{img_extension}"
+
+    async with aiofiles.open(out_file_path, "wb") as out_file:
+        content = await image_file.read()
+        await out_file.write(content)
+    return image_id
 
 
 def validate_image(image_file: UploadFile) -> None:
@@ -91,3 +97,12 @@ async def validate_images_in_db(session: AsyncSession, images_ids: List[int]) ->
             raise ValueError(
                 f"Image with id {image.id} relate to tweet with id {image.tweet_id}"
             )
+
+
+async def delete_images_by_ids(images_ids: List[int]) -> None:
+    """Function deletes images from disk by ids"""
+    cur_dir_path: str = os.path.dirname(__file__)
+    images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
+    images_paths: List[str] = [f"{images_path}/{image_id}.*" for image_id in images_ids]
+    delete_images_c: List[Awaitable] = [aiofiles.os.remove(path) for path in images_paths]
+    await asyncio.gather(*delete_images_c)
