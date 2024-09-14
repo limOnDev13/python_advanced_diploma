@@ -1,6 +1,7 @@
 import asyncio
 import os
 import re
+from logging import getLogger
 from typing import Awaitable, List, Optional
 
 import aiofiles
@@ -9,6 +10,8 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.queries import add_image, get_images_by_ids
+
+image_logger = getLogger("image_logger")
 
 
 def _file_extension(filename: Optional[str]) -> Optional[str]:
@@ -99,11 +102,38 @@ async def validate_images_in_db(session: AsyncSession, images_ids: List[int]) ->
             )
 
 
+async def _get_image_name_by_id(image_id, images_path) -> Optional[str]:
+    """Function returns list of images names by ids"""
+    image_logger.info(
+        "Start searching image name with id %d in dir %s", image_id, images_path
+    )
+    for filename in await aiofiles.os.listdir(images_path):
+        image_logger.debug("Current filename - %s", filename)
+        if re.fullmatch(rf"{image_id}\..*?$", filename):
+            image_logger.debug("The file %s fits - returns", filename)
+            return filename
+        image_logger.debug("The file %s does not fit", filename)
+    image_logger.warning("No matches")
+    return None
+
+
 async def delete_images_by_ids(images_ids: List[int]) -> None:
     """Function deletes images from disk by ids"""
+    # get current dir
     cur_dir_path: str = os.path.dirname(__file__)
-    images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
-    images_paths: List[str] = [f"{images_path}/{image_id}.*" for image_id in images_ids]
+    # get path to all images
+    images_dir: str = os.path.join(cur_dir_path, "..", "static", "images")
+    # get images names
+    images_names = await asyncio.gather(
+        *[_get_image_name_by_id(image_id, images_dir) for image_id in images_ids]
+    )
+    images_paths: List[str] = [
+        f"{images_dir}/{image_name}"
+        for image_name in images_names
+        if image_name is not None
+    ]
+
+    # delete images
     delete_images_c: List[Awaitable] = [
         aiofiles.os.remove(path) for path in images_paths
     ]
