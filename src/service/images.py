@@ -1,12 +1,17 @@
+import asyncio
 import os
 import re
-from typing import List, Optional
+from logging import getLogger
+from typing import Awaitable, List, Optional
 
+import aiofiles
+import aiofiles.os
 from fastapi import UploadFile
-from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.queries import add_image, get_images_by_ids
+
+image_logger = getLogger("image_logger")
 
 
 def _file_extension(filename: Optional[str]) -> Optional[str]:
@@ -33,16 +38,20 @@ async def upload_image(image_file: UploadFile, session: AsyncSession) -> int:
     :return: Image id
     :rtype: int
     """
-    with Image.open(image_file.file) as image:
-        img_extension: Optional[str] = _file_extension(image_file.filename)
-        image_id: int = await add_image(session)
-        cur_dir_path: str = os.path.dirname(__file__)
-        images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
-        if not img_extension:
-            image.save(f"{images_path}/{image_id}")
-        else:
-            image.save(f"{images_path}/{image_id}.{img_extension}")
-        return image_id
+    img_extension: Optional[str] = _file_extension(image_file.filename)
+    image_id: int = await add_image(session)
+    cur_dir_path: str = os.path.dirname(__file__)
+    images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
+
+    if not img_extension:
+        out_file_path = f"{images_path}/{image_id}"
+    else:
+        out_file_path = f"{images_path}/{image_id}.{img_extension}"
+
+    async with aiofiles.open(out_file_path, "wb") as out_file:
+        content = await image_file.read()
+        await out_file.write(content)
+    return image_id
 
 
 def validate_image(image_file: UploadFile) -> None:
@@ -91,3 +100,41 @@ async def validate_images_in_db(session: AsyncSession, images_ids: List[int]) ->
             raise ValueError(
                 f"Image with id {image.id} relate to tweet with id {image.tweet_id}"
             )
+
+
+async def _get_image_name_by_id(image_id, images_path) -> Optional[str]:
+    """Function returns list of images names by ids"""
+    image_logger.info(
+        "Start searching image name with id %d in dir %s", image_id, images_path
+    )
+    for filename in await aiofiles.os.listdir(images_path):
+        image_logger.debug("Current filename - %s", filename)
+        if re.fullmatch(rf"{image_id}\..*?$", filename):
+            image_logger.debug("The file %s fits - returns", filename)
+            return filename
+        image_logger.debug("The file %s does not fit", filename)
+    image_logger.warning("No matches")
+    return None
+
+
+async def delete_images_by_ids(images_ids: List[int]) -> None:
+    """Function deletes images from disk by ids"""
+    # get current dir
+    cur_dir_path: str = os.path.dirname(__file__)
+    # get path to all images
+    images_dir: str = os.path.join(cur_dir_path, "..", "static", "images")
+    # get images names
+    images_names = await asyncio.gather(
+        *[_get_image_name_by_id(image_id, images_dir) for image_id in images_ids]
+    )
+    images_paths: List[str] = [
+        f"{images_dir}/{image_name}"
+        for image_name in images_names
+        if image_name is not None
+    ]
+
+    # delete images
+    delete_images_c: List[Awaitable] = [
+        aiofiles.os.remove(path) for path in images_paths
+    ]
+    await asyncio.gather(*delete_images_c)

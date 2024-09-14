@@ -1,4 +1,5 @@
 import pytest
+from httpx import AsyncClient
 
 BASE_ROUTE: str = "/api/medias?api_key={}"
 TEST_IMAGE_PATH: str = "tests/test_routes/images/test.jpg"
@@ -7,7 +8,7 @@ FILE_WITH_WRONG_FORMAT: str = "tests/test_routes/images/wrong_format.txt"
 
 
 @pytest.mark.asyncio
-async def test_add_image(client, user_data: tuple[int, str]) -> None:
+async def test_add_image(client: AsyncClient, user_data: tuple[int, str]) -> None:
     """Testing saving several images"""
     _, api_key = user_data
     response = await client.post(
@@ -29,7 +30,7 @@ async def test_add_image(client, user_data: tuple[int, str]) -> None:
 
 
 @pytest.mark.asyncio
-async def test_invalid_api_key(client) -> None:
+async def test_send_img_with_invalid_api_key(client: AsyncClient) -> None:
     """Negative testing of saving image with invalid api_key"""
     response = await client.post(
         BASE_ROUTE.format("wrong_api_key"),
@@ -41,7 +42,7 @@ async def test_invalid_api_key(client) -> None:
 
 
 @pytest.mark.asyncio
-async def test_large_image(client, user_data: tuple[int, str]) -> None:
+async def test_large_image(client: AsyncClient, user_data: tuple[int, str]) -> None:
     """Negative testing of saving image with large size (more 2 MB)"""
     _, api_key = user_data
     response = await client.post(
@@ -58,7 +59,9 @@ async def test_large_image(client, user_data: tuple[int, str]) -> None:
 
 
 @pytest.mark.asyncio
-async def test_file_with_wrong_format(client, user_data: tuple[int, str]) -> None:
+async def test_file_with_wrong_format(
+    client: AsyncClient, user_data: tuple[int, str]
+) -> None:
     """Negative testing of saving file with"""
     _, api_key = user_data
     response = await client.post(
