@@ -157,7 +157,9 @@ def create_app() -> FastAPI:
         logger.debug("tweet_id was found")
 
         # get images ids which relate this tweet
-        images_ids: Optional[List[int]] = await q.get_images_ids_by_tweet_id(session, tweet_id)
+        images_ids: Optional[List[int]] = await q.get_images_ids_by_tweet_id(
+            session, tweet_id
+        )
         logger.debug("List of images ids: %s", str(images_ids))
         # delete tweet and images from db
         await q.delete_tweet_by_id(session, tweet_id)

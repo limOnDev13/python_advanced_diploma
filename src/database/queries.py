@@ -120,6 +120,7 @@ async def get_tweet_by_id(session: AsyncSession, tweet_id: int) -> Optional[Twee
     get_tweet_q = await session.execute(select(Tweet).where(Tweet.id == tweet_id))
     return get_tweet_q.scalar_one_or_none()
 
+
 async def get_images_ids_by_tweet_id(
     session: AsyncSession, tweet_id: int
 ) -> Optional[List[int]]:
