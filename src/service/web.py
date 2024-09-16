@@ -4,11 +4,11 @@ from typing import Optional
 
 from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
-from fastapi_exceptions.exceptions import AuthenticationFailed
+from fastapi_exceptions.exceptions import AuthenticationFailed, NotFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import queries as q
-from src.database.models import Base, Session, engine
+from src.database.models import Base, Session, Tweet, engine
 
 logger = getLogger("routes_logger")
 
@@ -80,3 +80,13 @@ async def check_api_key(
             AuthenticationFailed(f"api_key {api_key} not exists"), 401
         )
     return user_id
+
+
+async def check_tweet_id(
+    tweet_id: int, session: AsyncSession
+) -> Optional[JSONResponse]:
+    """Function check tweet_id"""
+    tweet: Optional[Tweet] = await q.get_tweet_by_id(session, tweet_id)
+    if not tweet:
+        return json_response_with_error(NotFound(f"tweet_id {tweet_id} not found"), 404)
+    return None

@@ -110,6 +110,31 @@ async def get_images_by_ids(
 
 
 async def get_all_images_ids(session: AsyncSession) -> List[int]:
-    """Function return all images ids"""
+    """Function returns all images ids"""
     images_q = await session.execute(select(Image.id))
     return [image_row[0] for image_row in images_q.all()]
+
+
+async def get_tweet_by_id(session: AsyncSession, tweet_id: int) -> Optional[Tweet]:
+    """Function returns tweet by id"""
+    get_tweet_q = await session.execute(select(Tweet).where(Tweet.id == tweet_id))
+    return get_tweet_q.unique().scalar_one_or_none()
+
+
+async def get_images_ids_by_tweet_id(
+    session: AsyncSession, tweet_id: int
+) -> Optional[List[int]]:
+    """Function returns list image ids by tweet_id"""
+    images_ids_q = await session.execute(
+        select(Image.id).where(Image.tweet_id == tweet_id)
+    )
+    return [image_row[0] for image_row in images_ids_q.all()]
+
+
+async def delete_tweet_by_id(session: AsyncSession, tweet_id: int) -> None:
+    """Function delete the tweet from db by id.
+    Returns list of images ids, which relate to this tweet or None"""
+    tweet: Optional[Tweet] = await get_tweet_by_id(session, tweet_id)
+    if tweet:
+        await session.delete(tweet)
+        await session.commit()
