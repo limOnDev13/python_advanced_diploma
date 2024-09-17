@@ -33,7 +33,7 @@ logger = getLogger("routes_logger.medias_logger")
                 "application/json": {
                     "example": {
                         "result": False,
-                        "error_type": "AuthenticationFailed",
+                        "error_type": "IdentificationError",
                         "error_message": "api_key <api_key> not exists",
                     }
                 }
