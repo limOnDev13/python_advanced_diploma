@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import queries as q
-from src.database.models import Base, Session, Tweet, engine
+from src.database.models import Base, Session, Tweet, engine, User
 from src.service.exceptions import ForbiddenError, IdentificationError, NotFoundError
 
 logger = getLogger("routes_logger")
@@ -44,7 +44,7 @@ async def get_session():
 
 async def check_api_key(
     api_key: str, session: AsyncSession = Depends(get_session)
-) -> int:
+) -> User:
     """
     The function checks if the given api_key is in the database.
     :param api_key: The key is the user ID
@@ -54,23 +54,27 @@ async def check_api_key(
     :rtype: int
     """
     logger.info("Start checking api_key")
-    user_id: Optional[int] = await q.get_user_id_by_api_key(session, api_key)
+    user: Optional[User] = await q.get_user_by_api_key(session, api_key)
 
-    if not user_id:
+    if not user:
         logger.warning("api_key not exists")
         raise IdentificationError("api_key not exists")
 
     logger.debug("Identification is successful")
-    return user_id
+    return user
 
 
-async def check_tweet_id(tweet_id: int, user_id: int, session: AsyncSession) -> None:
-    """Function check tweet_id"""
-    # Check that tweet_id exists
+async def check_tweet_exists(
+        tweet_id: int,
+        session: AsyncSession = Depends(get_session)) -> Tweet:
+    """Function checks that tweet_id exists"""
     tweet: Optional[Tweet] = await q.get_tweet_by_id(session, tweet_id)
     if not tweet:
         raise NotFoundError(f"tweet_id {tweet_id} not found")
+    return tweet
 
-    # check that tweet relates user_id
+
+async def check_tweet_relates_user(tweet: Tweet, user_id: int = Depends(check_api_key)) -> None:
+    """check that tweet relates user_id"""
     if tweet.user_id != user_id:
-        raise ForbiddenError(f"The tweet {tweet_id} does not belong to user {user_id}")
+        raise ForbiddenError(f"The tweet {tweet.user_id} does not belong to user {user_id}")
