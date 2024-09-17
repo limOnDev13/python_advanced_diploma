@@ -2,13 +2,13 @@ from logging import getLogger
 from logging.config import dictConfig
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, Response, UploadFile, status
-from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, Response, UploadFile, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.log_config import dict_config
 from src.database import queries as q
 from src.schemas import schemas
+from src.service.exceptions import http_exception_handler
 from src.service.images import (
     delete_images_by_ids,
     upload_image,
@@ -19,7 +19,6 @@ from src.service.web import (
     check_api_key,
     check_tweet_id,
     get_session,
-    json_response_with_error,
     lifespan,
 )
 
@@ -29,6 +28,7 @@ logger = getLogger("routes_logger")
 
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
+    app.add_exception_handler(HTTPException, http_exception_handler)
 
     @app.post(
         "/api/tweets",
@@ -67,22 +67,15 @@ def create_app() -> FastAPI:
         },
     )
     async def create_new_tweet(
-        api_key: str,
         tweet: schemas.Tweet,
         response: Response,
+        user_id: int = Depends(check_api_key),
         session: AsyncSession = Depends(get_session),
     ):
         """
         The endpoint creates a new tweet.
         """
         logger.info("Start creating a new tweet")
-        user_id: int | JSONResponse = await check_api_key(api_key, session, response)
-        # if api_key is in the database, the function will return user_id,
-        # otherwise it will return JSON Response - we will return it immediately
-        if not isinstance(user_id, int):
-            logger.warning("api_key not found")
-            return user_id
-        logger.debug("Identification is successful")
 
         # validate images_ids - images must be in db and not relate other tweets
         if tweet.tweet_media_ids:
@@ -90,7 +83,7 @@ def create_app() -> FastAPI:
                 await validate_images_in_db(session, tweet.tweet_media_ids)
             except ValueError as exc:
                 logger.debug("Some image ids not exists or relate other tweets")
-                return json_response_with_error(exc, 403)
+                raise HTTPException(detail=str(exc), status_code=403)
 
         tweet_id: int = await q.create_tweet(session, user_id, tweet.model_dump())
         logger.debug("Tweet was created, tweet_id=%d", tweet_id)
@@ -109,6 +102,18 @@ def create_app() -> FastAPI:
                             "result": False,
                             "error_type": "AuthenticationFailed",
                             "error_message": "api_key <api_key> not exists",
+                        }
+                    }
+                },
+            },
+            403: {
+                "description": "The tweet does not belong to this user",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "result": False,
+                            "error_type": "ForbiddenError",
+                            "error_message": "The tweet {tweet_id} does not belong to user {user_id}",
                         }
                     }
                 },
@@ -132,28 +137,17 @@ def create_app() -> FastAPI:
         },
     )
     async def delete_tweet(
-        api_key: str,
         tweet_id: int,
-        response: Response,
+        user_id: int = Depends(check_api_key),
         session: AsyncSession = Depends(get_session),
     ):
         """
         The endpoint deletes the tweet by id
         """
         logger.info("Start deleting the tweet")
-        user_id: int | JSONResponse = await check_api_key(api_key, session, response)
-        # if api_key is in the database, the function will return user_id,
-        # otherwise it will return JSON Response - we will return it immediately
-        if not isinstance(user_id, int):
-            logger.warning("api_key not found")
-            return user_id
-        logger.debug("Identification is successful")
 
         # check tweet_id
-        result: Optional[JSONResponse] = await check_tweet_id(tweet_id, session)
-        if result:
-            logger.warning("tweet_id not found")
-            return result
+        await check_tweet_id(tweet_id, user_id, session)
         logger.debug("tweet_id was found")
 
         # get images ids which relate this tweet
@@ -221,22 +215,14 @@ def create_app() -> FastAPI:
         },
     )
     async def save_image(
-        api_key: str,
         image: UploadFile,
-        response: Response,
+        user_id: int = Depends(check_api_key),
         session: AsyncSession = Depends(get_session),
     ):
         """
         The endpoint saves the image to disk
         """
         logger.info("Start saving image")
-        user_id: int | JSONResponse = await check_api_key(api_key, session, response)
-        # if api_key is in the database, the function will return user_id,
-        # otherwise it will return JSON Response - we will return it immediately
-        if not isinstance(user_id, int):
-            logger.warning("api_key not found")
-            return user_id
-        logger.debug("Identification is successful")
 
         try:
             logger.debug("Validating image")
@@ -249,13 +235,13 @@ def create_app() -> FastAPI:
             return {"result": True, "image_id": image_id}
         except ValueError as exc:
             logger.warning("Image too large", exc_info=exc)
-            return json_response_with_error(exc, 403)
+            raise HTTPException(detail=str(exc), status_code=403)
         except TypeError as exc:
             logger.warning("Wrong image format", exc_info=exc)
-            return json_response_with_error(exc, 403)
+            raise HTTPException(detail=str(exc), status_code=403)
         except Exception as exc:
             logger.exception("Smth wrong", exc_info=exc)
-            return json_response_with_error(exc, 400)
+            raise HTTPException(detail=str(exc), status_code=400)
         finally:
             await image.close()
 
