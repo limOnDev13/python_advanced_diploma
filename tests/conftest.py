@@ -148,3 +148,14 @@ async def tweet_id_with_images(
 
     # after the tests, need to delete the created images
     await delete_images_by_ids(images_ids)
+
+
+@pytest_asyncio.fixture(scope="function")
+async def tweet_id_with_like(
+    client: AsyncClient, user_data: Tuple[int, str], tweet_id_with_images: int
+) -> AsyncGenerator[int, None]:
+    _, api_key = user_data
+    # like this tweet
+    await client.post(f"/api/tweets/{tweet_id_with_images}/likes?api_key={api_key}")
+
+    yield tweet_id_with_images
