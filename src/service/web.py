@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import queries as q
-from src.database.models import Base, Session, Tweet, engine, User
+from src.database.models import Base, Session, Tweet, User, engine
 from src.service.exceptions import ForbiddenError, IdentificationError, NotFoundError
 
 logger = getLogger("routes_logger")
@@ -65,8 +65,8 @@ async def check_api_key(
 
 
 async def check_tweet_exists(
-        tweet_id: int,
-        session: AsyncSession = Depends(get_session)) -> Tweet:
+    tweet_id: int, session: AsyncSession = Depends(get_session)
+) -> Tweet:
     """Function checks that tweet_id exists"""
     tweet: Optional[Tweet] = await q.get_tweet_by_id(session, tweet_id)
     if not tweet:
@@ -74,7 +74,11 @@ async def check_tweet_exists(
     return tweet
 
 
-async def check_tweet_relates_user(tweet: Tweet, user_id: int = Depends(check_api_key)) -> None:
+async def check_tweet_relates_user(
+    tweet: Tweet, user_id: int = Depends(check_api_key)
+) -> None:
     """check that tweet relates user_id"""
     if tweet.user_id != user_id:
-        raise ForbiddenError(f"The tweet {tweet.user_id} does not belong to user {user_id}")
+        raise ForbiddenError(
+            f"The tweet {tweet.user_id} does not belong to user {user_id}"
+        )
