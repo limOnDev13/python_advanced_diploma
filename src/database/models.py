@@ -33,8 +33,11 @@ class User(Base):
         cascade="all, delete, delete-orphan",
     )
     likes_tweets: Mapped[Optional[List["Tweet"]]] = relationship(
-        "Tweet", secondary="likes", back_populates="users_like",
-        cascade="all, delete", lazy="joined"
+        "Tweet",
+        secondary="likes",
+        back_populates="users_like",
+        cascade="all, delete",
+        lazy="joined",
     )
 
     def to_json(self) -> dict[str, Any]:
@@ -52,8 +55,11 @@ class Tweet(Base):
         "Image", lazy="joined", cascade="all, delete, delete-orphan"
     )
     users_like: Mapped[Optional[List["User"]]] = relationship(
-        "User", secondary="likes", back_populates="likes_tweets",
-        cascade="all, delete", lazy="joined"
+        "User",
+        secondary="likes",
+        back_populates="likes_tweets",
+        cascade="all, delete",
+        lazy="joined",
     )
 
 
@@ -71,6 +77,8 @@ class Like(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
-    tweet_id: Mapped[int] = mapped_column(Integer, ForeignKey("tweets.id"), nullable=True)
+    tweet_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tweets.id"), nullable=True
+    )
 
     __table_args__ = (UniqueConstraint("user_id", "tweet_id", name="unq_likes"),)
