@@ -3,10 +3,10 @@
 from logging import Logger
 from typing import Dict, List, Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Image, Tweet, User, Like
+from .models import Image, Like, Tweet, User
 
 logger = Logger("query_logger")
 logger.setLevel("DEBUG")
@@ -141,8 +141,14 @@ async def delete_tweet_by_id(session: AsyncSession, tweet_id: int) -> None:
 
 
 async def like_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
-    if tweet in user.likes_tweets:
-        raise ValueError(f"The tweet {tweet.id} already has a user {user.id} like")
+    q = await session.execute(
+        select(Like).where(and_(Like.user_id == user.id, Like.tweet_id == tweet.id))
+    )
+    like = q.scalars().first()
+    if like:
+        raise ValueError(
+            f"The tweet {tweet.id} already has a user {user.id} like. Like_id={like.id}"
+        )
 
     new_like = Like(user_id=user.id, tweet_id=tweet.id)
     session.add(new_like)
