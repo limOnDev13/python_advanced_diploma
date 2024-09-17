@@ -21,11 +21,5 @@ class Tweet(BaseModel):
 
 class ErrorSchema(BaseModel):
     result: bool = False
-    error_type: str = Field(
-        default=...,
-        description="Type of exception"
-    )
-    error_message: str = Field(
-        default=...,
-        description="Error message"
-    )
+    error_type: str = Field(default=..., description="Type of exception")
+    error_message: str = Field(default=..., description="Error message")

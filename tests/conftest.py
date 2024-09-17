@@ -56,7 +56,9 @@ async def user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str],
 
 
 @pytest_asyncio.fixture(scope="function")
-async def other_user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str], None]:
+async def other_user_data(
+    db_session: AsyncSession,
+) -> AsyncGenerator[Tuple[int, str], None]:
     async with db_session.begin():
         user: User = User(api_key="other_test_api_key")
         db_session.add(user)

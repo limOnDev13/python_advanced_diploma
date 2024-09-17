@@ -1,14 +1,13 @@
 from logging import getLogger
-from typing import Optional, List
+from typing import List, Optional
 
-from fastapi import APIRouter, Response, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.schemas import schemas
 from src.database import queries as q
-from src.service.web import check_api_key, get_session, check_tweet_id
-from src.service.images import validate_images_in_db, delete_images_by_ids
-
+from src.schemas import schemas
+from src.service.images import delete_images_by_ids, validate_images_in_db
+from src.service.web import check_api_key, check_tweet_id, get_session
 
 tweets_router: APIRouter = APIRouter()
 
@@ -52,10 +51,10 @@ logger = getLogger("routes_logger.tweets_logger")
     },
 )
 async def create_new_tweet(
-        tweet: schemas.Tweet,
-        response: Response,
-        user_id: int = Depends(check_api_key),
-        session: AsyncSession = Depends(get_session),
+    tweet: schemas.Tweet,
+    response: Response,
+    user_id: int = Depends(check_api_key),
+    session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint creates a new tweet.
@@ -99,7 +98,8 @@ async def create_new_tweet(
                     "example": {
                         "result": False,
                         "error_type": "ForbiddenError",
-                        "error_message": "The tweet {tweet_id} does not belong to user {user_id}",
+                        "error_message": "The tweet {tweet_id} does not belong"
+                        " to user {user_id}",
                     }
                 }
             },
@@ -123,9 +123,9 @@ async def create_new_tweet(
     },
 )
 async def delete_tweet(
-        tweet_id: int,
-        user_id: int = Depends(check_api_key),
-        session: AsyncSession = Depends(get_session),
+    tweet_id: int,
+    user_id: int = Depends(check_api_key),
+    session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint deletes the tweet by id
