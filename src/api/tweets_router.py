@@ -210,7 +210,7 @@ async def like_tweet(
     session: AsyncSession = Depends(get_session),
 ):
     """
-    The endpoint deletes the tweet by id
+    The endpoint to like a tweet
     """
     logger.info("Start liking the tweet")
     logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
@@ -220,4 +220,70 @@ async def like_tweet(
         logger.warning(str(exc))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     logger.info("Successful like")
+    return {"result": True}
+
+
+@tweets_router.delete(
+    "/api/tweets/{tweet_id}/likes",
+    status_code=200,
+    responses={
+        400: {
+            "description": "The tweet already has not a user like",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "HTTPException",
+                        "error_message": "The tweet {tweet.id}"
+                        " already has not a user {user.id} like",
+                    }
+                }
+            },
+        },
+        401: {
+            "description": "api_key not exists",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "IdentificationError",
+                        "error_message": "api_key {api_key} not exists",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Tweet not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "NotFoundError",
+                        "error_message": "tweet_id {tweet_id} not found",
+                    }
+                }
+            },
+        },
+        200: {
+            "description": "The user unliked the tweet",
+            "content": {"application/json": {"example": {"result": True}}},
+        },
+    },
+)
+async def unlike_tweet(
+    tweet: models.Tweet = Depends(check_tweet_exists),
+    user: models.User = Depends(check_api_key),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    The endpoint to unlike a tweet
+    """
+    logger.info("Start unliking the tweet")
+    logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
+    try:
+        await q.unlike_tweet(session, tweet, user)
+    except ValueError as exc:
+        logger.warning(str(exc))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    logger.info("Successful unlike")
     return {"result": True}
