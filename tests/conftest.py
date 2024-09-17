@@ -7,9 +7,10 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.api.routes import create_app, get_session
+from src.api.routes import create_app
 from src.database.models import DB_URL, Base, User
 from src.service.images import delete_images_by_ids
+from src.service.web import get_session
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -52,6 +53,17 @@ async def user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str],
         db_session.add(user)
         await db_session.commit()
     yield user.id, "test_api_key"
+
+
+@pytest_asyncio.fixture(scope="function")
+async def other_user_data(
+    db_session: AsyncSession,
+) -> AsyncGenerator[Tuple[int, str], None]:
+    async with db_session.begin():
+        user: User = User(api_key="other_test_api_key")
+        db_session.add(user)
+        await db_session.commit()
+    yield user.id, "other_test_api_key"
 
 
 @pytest_asyncio.fixture(scope="function")
