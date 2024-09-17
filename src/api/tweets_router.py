@@ -3,18 +3,17 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 
-from src.database import queries as q
 from src.database import models
+from src.database import queries as q
 from src.schemas import schemas
+from src.service.exceptions import ForbiddenError
 from src.service.images import delete_images_by_ids, validate_images_in_db
 from src.service.web import check_api_key, check_tweet_exists, get_session
-from src.service.exceptions import ForbiddenError
 
 tweets_router: APIRouter = APIRouter()
 
-logger = getLogger("routes_logger.tweets_logger")
+logger = getLogger("routes_logger.tweets_router")
 
 
 @tweets_router.post(
@@ -137,7 +136,9 @@ async def delete_tweet(
 
     # check that tweet relates user
     if tweet.user_id != user.id:
-        raise ForbiddenError(f"The tweet {tweet.user_id} does not belong to user {user.id}")
+        raise ForbiddenError(
+            f"The tweet {tweet.user_id} does not belong to user {user.id}"
+        )
 
     # get images ids which relate this tweet
     images_ids: Optional[List[int]] = await q.get_images_ids_by_tweet_id(
@@ -167,7 +168,8 @@ async def delete_tweet(
                     "example": {
                         "result": False,
                         "error_type": "HTTPException",
-                        "error_message": "The tweet {tweet.id} already has a user {user.id} like",
+                        "error_message": "The tweet {tweet.id}"
+                        " already has a user {user.id} like",
                     }
                 }
             },
@@ -211,12 +213,11 @@ async def like_tweet(
     The endpoint deletes the tweet by id
     """
     logger.info("Start liking the tweet")
+    logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
     try:
         await q.like_tweet(session, tweet, user)
     except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc)
-        )
-
+        logger.warning(str(exc))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    logger.info("Successful like")
     return {"result": True}
