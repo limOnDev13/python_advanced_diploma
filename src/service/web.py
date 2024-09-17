@@ -2,12 +2,12 @@ from contextlib import asynccontextmanager
 from logging import getLogger
 from typing import Optional
 
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import queries as q
 from src.database.models import Base, Session, Tweet, engine
-from src.service.exceptions import IdentificationError, NotFoundError, ForbiddenError
+from src.service.exceptions import ForbiddenError, IdentificationError, NotFoundError
 
 logger = getLogger("routes_logger")
 
@@ -42,7 +42,9 @@ async def get_session():
         await session.close()
 
 
-async def check_api_key(api_key: str, session: AsyncSession = Depends(get_session)) -> int:
+async def check_api_key(
+    api_key: str, session: AsyncSession = Depends(get_session)
+) -> int:
     """
     The function checks if the given api_key is in the database.
     :param api_key: The key is the user ID
@@ -62,9 +64,7 @@ async def check_api_key(api_key: str, session: AsyncSession = Depends(get_sessio
     return user_id
 
 
-async def check_tweet_id(
-    tweet_id: int, user_id: int, session: AsyncSession
-) -> None:
+async def check_tweet_id(tweet_id: int, user_id: int, session: AsyncSession) -> None:
     """Function check tweet_id"""
     # Check that tweet_id exists
     tweet: Optional[Tweet] = await q.get_tweet_by_id(session, tweet_id)
