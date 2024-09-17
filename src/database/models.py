@@ -2,7 +2,7 @@
 
 from typing import Any, List, Optional
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -32,6 +32,13 @@ class User(Base):
         lazy="joined",
         cascade="all, delete, delete-orphan",
     )
+    likes_tweets: Mapped[Optional[List["Tweet"]]] = relationship(
+        "Tweet",
+        secondary="likes",
+        back_populates="users_like",
+        cascade="all, delete",
+        lazy="joined",
+    )
 
     def to_json(self) -> dict[str, Any]:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -47,6 +54,13 @@ class Tweet(Base):
     images: Mapped[Optional[List["Image"]]] = relationship(
         "Image", lazy="joined", cascade="all, delete, delete-orphan"
     )
+    users_like: Mapped[Optional[List["User"]]] = relationship(
+        "User",
+        secondary="likes",
+        back_populates="likes_tweets",
+        cascade="all, delete",
+        lazy="joined",
+    )
 
 
 class Image(Base):
@@ -56,3 +70,15 @@ class Image(Base):
     tweet_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("tweets.id"), nullable=True
     )
+
+
+class Like(Base):
+    __tablename__ = "likes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    tweet_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tweets.id"), nullable=True
+    )
+
+    __table_args__ = (UniqueConstraint("user_id", "tweet_id", name="unq_likes"),)
