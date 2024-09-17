@@ -77,3 +77,22 @@ async def test_delete_not_existing_tweet(client: AsyncClient, user_data) -> None
         BASE_ROUTE.format(tweet_id=not_existing_tweet_id, api_key=api_key)
     )
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_not_user_tweet(client: AsyncClient, other_user_data,
+                                     tweet_id_with_images: int, tweet_id_without_img: int) -> None:
+    """A negative test of deleting a tweet that does not belong to this user"""
+    _, other_api_key = other_user_data
+
+    # try deleting existing tweet with images
+    response = await client.delete(
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=other_api_key)
+    )
+    assert response.status_code == 403
+
+    # try deleting existing tweet without images
+    response = await client.delete(
+        BASE_ROUTE.format(tweet_id=tweet_id_without_img, api_key=other_api_key)
+    )
+    assert response.status_code == 403
