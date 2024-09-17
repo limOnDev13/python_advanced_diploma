@@ -80,8 +80,12 @@ async def test_delete_not_existing_tweet(client: AsyncClient, user_data) -> None
 
 
 @pytest.mark.asyncio
-async def test_delete_not_user_tweet(client: AsyncClient, other_user_data,
-                                     tweet_id_with_images: int, tweet_id_without_img: int) -> None:
+async def test_delete_not_user_tweet(
+    client: AsyncClient,
+    other_user_data,
+    tweet_id_with_images: int,
+    tweet_id_without_img: int,
+) -> None:
     """A negative test of deleting a tweet that does not belong to this user"""
     _, other_api_key = other_user_data
 
