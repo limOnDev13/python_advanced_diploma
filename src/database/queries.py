@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Image, Tweet, User
+from .models import Image, Tweet, User, Like
 
 logger = Logger("query_logger")
 logger.setLevel("DEBUG")
@@ -37,7 +37,7 @@ async def create_user(session: AsyncSession, user_dict: Dict[str, str]) -> None:
     await session.commit()
 
 
-async def get_user_id_by_api_key(session: AsyncSession, api_key: str) -> Optional[int]:
+async def get_user_by_api_key(session: AsyncSession, api_key: str) -> Optional[User]:
     """
     Function for getting user by api_key
     :param session: session object
@@ -46,8 +46,8 @@ async def get_user_id_by_api_key(session: AsyncSession, api_key: str) -> Optiona
     :return: user_id, if such api_key exists, else None
     :rtype: Optional[int]
     """
-    user = await session.execute(select(User.id).where(User.api_key == api_key))
-    return user.scalar()
+    user = await session.execute(select(User).where(User.api_key == api_key))
+    return user.scalars().first()
 
 
 async def create_tweet(session: AsyncSession, user_id: int, tweet_data: Dict) -> int:
@@ -138,3 +138,12 @@ async def delete_tweet_by_id(session: AsyncSession, tweet_id: int) -> None:
     if tweet:
         await session.delete(tweet)
         await session.commit()
+
+
+async def like_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
+    if tweet in user.likes_tweets:
+        raise ValueError(f"The tweet {tweet.id} already has a user {user.id} like")
+
+    new_like = Like(user_id=user.id, tweet_id=tweet.id)
+    session.add(new_like)
+    await session.commit()
