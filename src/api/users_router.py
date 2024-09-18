@@ -7,7 +7,7 @@ from src.database import models
 from src.database import queries as q
 from src.service.web import check_api_key, check_users_exists, get_session
 
-users_router = APIRouter()
+users_router = APIRouter(tags=["users"])
 
 logger = logging.getLogger("routes_logger.users_logger")
 
@@ -66,7 +66,7 @@ logger = logging.getLogger("routes_logger.users_logger")
             },
         },
         200: {
-            "description": "The user has tagged the user with the id",
+            "description": "The user has tagged the author",
             "content": {"application/json": {"example": {"result": True}}},
         },
     },
@@ -95,5 +95,92 @@ async def follow_user(
         logger.warning(str(exc))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     logger.info("Successful following")
+
+    return {"result": True}
+
+
+@users_router.delete(
+    "/api/users/{user_id}/follow",
+    status_code=200,
+    responses={
+        400: {
+            "description": "The user has already unsubscribed from the author",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "HTTPException",
+                        "error_message": "The follower {follower.id} has already"
+                        " been unsubscribed from the author {author.id}",
+                    }
+                }
+            },
+        },
+        401: {
+            "description": "api_key not exists",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "IdentificationError",
+                        "error_message": "api_key {api_key} not exists",
+                    }
+                }
+            },
+        },
+        403: {
+            "description": "A follower cannot unfollow to himself",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "HTTPException",
+                        "error_message": "A follower cannot unsubscribe to himself",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "User not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "NotFoundError",
+                        "error_message": "User {user_id} not found",
+                    }
+                }
+            },
+        },
+        200: {
+            "description": "The user has unfollowed the author",
+            "content": {"application/json": {"example": {"result": True}}},
+        },
+    },
+)
+async def unfollow_user(
+    follower: models.User = Depends(check_api_key),
+    author: models.User = Depends(check_users_exists),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    The endpoint for unsubscribing from the author
+    """
+    logger.info("Start unfollowing the author")
+    logger.debug("follower.id=%d, author.id=%d", follower.id, author.id)
+
+    # follower can't unfollow to himself
+    if follower.id == author.id:
+        logger.warning("Follower can't unfollow to himself")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="A follower cannot unsubscribe to himself",
+        )
+    try:
+        await q.unfollow_author(session, follower, author)
+    except ValueError as exc:
+        logger.warning(str(exc))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    logger.info("Successful unfollowing")
 
     return {"result": True}
