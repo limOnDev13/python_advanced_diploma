@@ -177,6 +177,5 @@ async def follower_api_key_and_author_id(
     _, follower_api_key = user_data
     author_id, _ = other_user_data
     # follow author
-    await client.post(f"/api/users/{author_id}/likes?api_key={follower_api_key}")
-
+    await client.post(f"/api/users/{author_id}/follow?api_key={follower_api_key}")
     yield follower_api_key, author_id
