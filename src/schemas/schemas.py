@@ -17,3 +17,9 @@ class Tweet(BaseModel):
         "automatically when sending a tweet and"
         " substitute the id from there in json.",
     )
+
+
+class ErrorSchema(BaseModel):
+    result: bool = False
+    error_type: str = Field(default=..., description="Type of exception")
+    error_message: str = Field(default=..., description="Error message")
