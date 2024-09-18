@@ -153,3 +153,15 @@ async def like_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
     new_like = Like(user_id=user.id, tweet_id=tweet.id)
     session.add(new_like)
     await session.commit()
+
+
+async def unlike_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
+    q = await session.execute(
+        select(Like).where(and_(Like.user_id == user.id, Like.tweet_id == tweet.id))
+    )
+    like = q.scalars().first()
+    if not like:
+        raise ValueError(f"The tweet {tweet.id} already has not a user {user.id} like.")
+
+    await session.delete(like)
+    await session.commit()
