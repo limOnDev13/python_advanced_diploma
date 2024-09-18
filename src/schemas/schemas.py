@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class Tweet(BaseModel):
+class TweetSchema(BaseModel):
     tweet_data: str = Field(
         default=...,
         title="The text of the tweet",
@@ -17,6 +17,26 @@ class Tweet(BaseModel):
         "automatically when sending a tweet and"
         " substitute the id from there in json.",
     )
+
+
+class UserSchema(BaseModel):
+    id: int = Field(default=..., description="User id")
+    name: str = Field(default=..., description="User's name")
+
+
+class UserOutSchema(BaseModel):
+    result: bool = True
+    id: int = Field(default=..., description="User id")
+    name: str = Field(default=..., description="User's name")
+    followers: List[UserSchema] = Field(
+        default_factory=list, description="List of followers"
+    )
+    following: List[UserSchema] = Field(
+        default_factory=list, description="List of authors subscribed to by users"
+    )
+
+    class ConfigDict:
+        orm_mod = True
 
 
 class ErrorSchema(BaseModel):

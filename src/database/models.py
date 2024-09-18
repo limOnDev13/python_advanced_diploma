@@ -25,6 +25,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String)
     api_key: Mapped[str] = mapped_column(String, unique=True, index=True)
     tweets: Mapped[List["Tweet"]] = relationship(
         "Tweet",
@@ -58,8 +59,17 @@ class User(Base):
         lazy="joined",
     )
 
-    def to_json(self) -> dict[str, Any]:
+    def brief_json(self) -> dict[str, Any]:
+        """Returns brief info about user"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def full_json(self) -> dict[str, Any]:
+        result_json: dict = self.brief_json()
+        if self.followers is not None:
+            result_json["followers"] = [user.brief_json() for user in self.followers]
+        if self.authors is not None:
+            result_json["following"] = [user.brief_json() for user in self.authors]
+        return result_json
 
 
 class Tweet(Base):

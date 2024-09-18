@@ -43,13 +43,18 @@ async def get_session():
 
     if config.debug:
         # Check count users in db
-        num_users: int = await q.count_users(session)
+        num_users: Optional[int] = await q.count_users(session)
         logger.debug("There are %d users in the table", num_users)
 
         # There must be at least two users in the table
-        for num in range(num_users + 1, 3):
-            new_user: User = await q.create_user(session, {"api_key": f"api_key_{num}"})
-            logger.debug("Add user with id %d and api_key api_key_%d", new_user.id, num)
+        if num_users is not None:  # mypy
+            for num in range(num_users + 1, 3):
+                new_user: User = await q.create_user(
+                    session, {"api_key": f"api_key_{num}", "name": f"name_{num}"}
+                )
+                logger.debug(
+                    "Add user with id %d and api_key api_key_%d", new_user.id, num
+                )
 
     try:
         logger.debug("Before yield session")
