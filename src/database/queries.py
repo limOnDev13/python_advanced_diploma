@@ -193,3 +193,22 @@ async def follow_author(session: AsyncSession, follower: User, author: User) -> 
     new_following = Following(follower_id=follower.id, author_id=author.id)
     session.add(new_following)
     await session.commit()
+
+
+async def unfollow_author(session: AsyncSession, follower: User, author: User) -> None:
+    """The function unsubscribes the follower to the author"""
+    # check that the pairs (follower, author) in the database
+    get_following_q = await session.execute(
+        select(Following).where(
+            and_(Following.follower_id == follower.id, Following.author_id == author.id)
+        )
+    )
+    pair: Optional[Following] = get_following_q.scalars().first()
+
+    if not pair:
+        raise ValueError(
+            f"The follower {follower.id} has already been"
+            f" unsubscribed from the author {author.id}"
+        )
+    await session.delete(pair)
+    await session.commit()

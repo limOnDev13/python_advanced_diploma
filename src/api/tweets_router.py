@@ -11,7 +11,7 @@ from src.service.exceptions import ForbiddenError
 from src.service.images import delete_images_by_ids, validate_images_in_db
 from src.service.web import check_api_key, check_tweet_exists, get_session
 
-tweets_router: APIRouter = APIRouter()
+tweets_router: APIRouter = APIRouter(tags=["tweets"])
 
 logger = getLogger("routes_logger.tweets_router")
 
