@@ -48,8 +48,9 @@ async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 
 @pytest_asyncio.fixture(scope="function")
 async def user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str], None]:
+    """Fixture. Returns id and api_key of test user"""
     async with db_session.begin():
-        user: User = User(api_key="test_api_key")
+        user: User = User(api_key="test_api_key", name="test_name_1")
         db_session.add(user)
         await db_session.commit()
     yield user.id, "test_api_key"
@@ -59,8 +60,9 @@ async def user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str],
 async def other_user_data(
     db_session: AsyncSession,
 ) -> AsyncGenerator[Tuple[int, str], None]:
+    """Fixture. Returns id and api_key of second test user"""
     async with db_session.begin():
-        user: User = User(api_key="other_test_api_key")
+        user: User = User(api_key="other_test_api_key", name="test_name_2")
         db_session.add(user)
         await db_session.commit()
     yield user.id, "other_test_api_key"
@@ -70,6 +72,7 @@ async def other_user_data(
 async def tweet_id_without_img(
     client: AsyncClient, user_data
 ) -> AsyncGenerator[int, None]:
+    """Fixture. Returns id of tweet without images"""
     user_id, api_key = user_data
     new_tweet: Dict = {"tweet_data": "test_tweet_text", "user_id": user_id}
     response = await client.post(
@@ -80,11 +83,13 @@ async def tweet_id_without_img(
 
 @pytest.fixture(scope="function")
 def images_path() -> Generator[str, None, None]:
+    """Fixture. Returns path to images"""
     yield os.path.join(os.path.abspath("."), "src", "static", "images")
 
 
 @pytest_asyncio.fixture(scope="function")
 async def image_id(client: AsyncClient, user_data) -> AsyncGenerator[int, None]:
+    """Fixture. Returns id of uploaded image"""
     _, api_key = user_data
     response = await client.post(
         "/api/medias?api_key={}".format(api_key),
@@ -107,6 +112,7 @@ async def image_id(client: AsyncClient, user_data) -> AsyncGenerator[int, None]:
 async def images_ids(
     client: AsyncClient, user_data, images_path: str
 ) -> AsyncGenerator[List[int], None]:
+    """Fixture. Returns list of ids of uploaded images"""
     user_id, api_key = user_data
 
     # Send some images
@@ -133,6 +139,7 @@ async def images_ids(
 async def tweet_id_with_images(
     client: AsyncClient, user_data, images_ids: List[int]
 ) -> AsyncGenerator[int, None]:
+    """Fixture. Returns id of tweet with images"""
     user_id, api_key = user_data
     # create tweet with images_ids
     new_tweet: Dict = {
@@ -148,3 +155,27 @@ async def tweet_id_with_images(
 
     # after the tests, need to delete the created images
     await delete_images_by_ids(images_ids)
+
+
+@pytest_asyncio.fixture(scope="function")
+async def tweet_id_with_like(
+    client: AsyncClient, user_data: Tuple[int, str], tweet_id_with_images: int
+) -> AsyncGenerator[int, None]:
+    """Fixture. Returns id of the tweet with like from user_data"""
+    _, api_key = user_data
+    # like this tweet
+    await client.post(f"/api/tweets/{tweet_id_with_images}/likes?api_key={api_key}")
+
+    yield tweet_id_with_images
+
+
+@pytest_asyncio.fixture(scope="function")
+async def follower_api_key_and_author_id(
+    client: AsyncClient, user_data: Tuple[int, str], other_user_data: Tuple[int, str]
+) -> AsyncGenerator[Tuple[str, int], None]:
+    """Fixture. Returns follower api_key and author id"""
+    _, follower_api_key = user_data
+    author_id, _ = other_user_data
+    # follow author
+    await client.post(f"/api/users/{author_id}/follow?api_key={follower_api_key}")
+    yield follower_api_key, author_id

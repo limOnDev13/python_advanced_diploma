@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.service.images import upload_image, validate_image
 from src.service.web import check_api_key, get_session
 
-medias_router: APIRouter = APIRouter()
+medias_router: APIRouter = APIRouter(tags=["medias"])
 
 logger = getLogger("routes_logger.medias_logger")
 
