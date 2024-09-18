@@ -25,6 +25,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String)
     api_key: Mapped[str] = mapped_column(String, unique=True, index=True)
     tweets: Mapped[List["Tweet"]] = relationship(
         "Tweet",
@@ -39,9 +40,36 @@ class User(Base):
         cascade="all, delete",
         lazy="joined",
     )
+    authors: Mapped[Optional[List["User"]]] = relationship(
+        "User",
+        secondary="following",
+        primaryjoin="User.id==Following.follower_id",
+        secondaryjoin="User.id==Following.author_id",
+        back_populates="followers",
+        cascade="all, delete",
+        lazy="joined",
+    )
+    followers: Mapped[Optional[List["User"]]] = relationship(
+        "User",
+        secondary="following",
+        primaryjoin="User.id==Following.author_id",
+        secondaryjoin="User.id==Following.follower_id",
+        back_populates="authors",
+        cascade="all, delete",
+        lazy="joined",
+    )
 
-    def to_json(self) -> dict[str, Any]:
+    def brief_json(self) -> dict[str, Any]:
+        """Returns brief info about user"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def full_json(self) -> dict[str, Any]:
+        result_json: dict = self.brief_json()
+        if self.followers is not None:
+            result_json["followers"] = [user.brief_json() for user in self.followers]
+        if self.authors is not None:
+            result_json["following"] = [user.brief_json() for user in self.authors]
+        return result_json
 
 
 class Tweet(Base):
@@ -76,9 +104,27 @@ class Like(Base):
     __tablename__ = "likes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
     tweet_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("tweets.id"), nullable=True
+        Integer, ForeignKey("tweets.id"), nullable=False
     )
 
     __table_args__ = (UniqueConstraint("user_id", "tweet_id", name="unq_likes"),)
+
+
+class Following(Base):
+    __tablename__ = "following"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    author_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    follower_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("author_id", "follower_id", name="unq_following"),
+    )
