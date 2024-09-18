@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Sequence
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .models import Following, Image, Like, Tweet, User
 
@@ -21,7 +22,6 @@ async def count_users(session: AsyncSession) -> Optional[int]:
     :rtype: bool
     """
     num_users = await session.execute(select(func.count()).select_from(User))
-    logger.debug("Num users: %d", num_users)
     return num_users.scalar()
 
 
@@ -49,7 +49,12 @@ async def get_user_by_api_key(session: AsyncSession, api_key: str) -> Optional[U
     :return: user_id, if such api_key exists, else None
     :rtype: Optional[int]
     """
-    user = await session.execute(select(User).where(User.api_key == api_key))
+    user = await session.execute(
+        select(User)
+        .where(User.api_key == api_key)
+        .options(selectinload(User.followers))
+        .options(selectinload(User.authors))
+    )
     return user.scalars().first()
 
 
@@ -172,7 +177,12 @@ async def unlike_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
 
 async def get_user_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
     """Function returns user by id"""
-    get_user_q = await session.execute(select(User).where(User.id == user_id))
+    get_user_q = await session.execute(
+        select(User)
+        .where(User.id == user_id)
+        .options(selectinload(User.followers))
+        .options(selectinload(User.authors))
+    )
     return get_user_q.scalars().first()
 
 
@@ -192,6 +202,8 @@ async def follow_author(session: AsyncSession, follower: User, author: User) -> 
         )
     new_following = Following(follower_id=follower.id, author_id=author.id)
     session.add(new_following)
+    await session.refresh(author)
+    await session.refresh(follower)
     await session.commit()
 
 

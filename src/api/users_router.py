@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import models
 from src.database import queries as q
+from src.schemas import schemas
 from src.service.web import check_api_key, check_users_exists, get_session
 
 users_router = APIRouter(tags=["users"])
@@ -184,3 +185,35 @@ async def unfollow_user(
     logger.info("Successful unfollowing")
 
     return {"result": True}
+
+
+@users_router.get(
+    "/api/users/me",
+    status_code=200,
+    response_model=schemas.UserOutSchema,
+    responses={
+        401: {
+            "description": "api_key not exists",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "IdentificationError",
+                        "error_message": "api_key {api_key} not exists",
+                    }
+                }
+            },
+        },
+    },
+)
+async def get_current_user_info(
+    user: models.User = Depends(check_api_key),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    The endpoint for getting info about a current user
+    """
+    logger.info("Start getting user info")
+    logger.debug("User followers: %s", str(user.followers))
+    logger.debug("The user is subscribed to the authors: %s", str(user.authors))
+    return user.full_json()
