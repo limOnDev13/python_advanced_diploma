@@ -53,7 +53,7 @@ logger = getLogger("routes_logger.tweets_router")
     },
 )
 async def create_new_tweet(
-    tweet: schemas.Tweet,
+    tweet: schemas.TweetSchema,
     response: Response,
     user: models.User = Depends(check_api_key),
     session: AsyncSession = Depends(get_session),
