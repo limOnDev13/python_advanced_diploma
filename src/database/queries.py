@@ -3,28 +3,29 @@
 from logging import Logger
 from typing import Dict, List, Optional, Sequence
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from .models import Image, Like, Tweet, User
+from .models import Following, Image, Like, Tweet, User
 
 logger = Logger("query_logger")
 logger.setLevel("DEBUG")
 
 
-async def user_table_has_rows(session: AsyncSession) -> bool:
+async def count_users(session: AsyncSession) -> Optional[int]:
     """
-    The function checks if there are records in the User table
+    The function returns count users in db
     :param session: session object
     :type session: AsyncSession
     :return: True, if table User has rows, else False
     :rtype: bool
     """
-    exists = await session.execute(select(User))
-    return exists.first() is not None
+    num_users = await session.execute(select(func.count()).select_from(User))
+    return num_users.scalar()
 
 
-async def create_user(session: AsyncSession, user_dict: Dict[str, str]) -> None:
+async def create_user(session: AsyncSession, user_dict: Dict[str, str]) -> User:
     """
     The function adds the user to the database
     :param session: session object
@@ -33,8 +34,10 @@ async def create_user(session: AsyncSession, user_dict: Dict[str, str]) -> None:
     :type user_dict: Dict[str, str]
     :return: None
     """
-    session.add(User(**user_dict))
+    new_user = User(**user_dict)
+    session.add(new_user)
     await session.commit()
+    return new_user
 
 
 async def get_user_by_api_key(session: AsyncSession, api_key: str) -> Optional[User]:
@@ -46,7 +49,12 @@ async def get_user_by_api_key(session: AsyncSession, api_key: str) -> Optional[U
     :return: user_id, if such api_key exists, else None
     :rtype: Optional[int]
     """
-    user = await session.execute(select(User).where(User.api_key == api_key))
+    user = await session.execute(
+        select(User)
+        .where(User.api_key == api_key)
+        .options(selectinload(User.followers))
+        .options(selectinload(User.authors))
+    )
     return user.scalars().first()
 
 
@@ -152,4 +160,67 @@ async def like_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
 
     new_like = Like(user_id=user.id, tweet_id=tweet.id)
     session.add(new_like)
+    await session.commit()
+
+
+async def unlike_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
+    q = await session.execute(
+        select(Like).where(and_(Like.user_id == user.id, Like.tweet_id == tweet.id))
+    )
+    like = q.scalars().first()
+    if not like:
+        raise ValueError(f"The tweet {tweet.id} already has not a user {user.id} like.")
+
+    await session.delete(like)
+    await session.commit()
+
+
+async def get_user_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
+    """Function returns user by id"""
+    get_user_q = await session.execute(
+        select(User)
+        .where(User.id == user_id)
+        .options(selectinload(User.followers))
+        .options(selectinload(User.authors))
+    )
+    return get_user_q.scalars().first()
+
+
+async def follow_author(session: AsyncSession, follower: User, author: User) -> None:
+    """The function subscribes the follower to the author"""
+    # check that the pairs (follower, author) not in the database
+    get_following_q = await session.execute(
+        select(Following).where(
+            and_(Following.follower_id == follower.id, Following.author_id == author.id)
+        )
+    )
+    pair: Optional[Following] = get_following_q.scalars().first()
+
+    if pair:
+        raise ValueError(
+            f"The user {follower.id} is already following the author {author.id}"
+        )
+    new_following = Following(follower_id=follower.id, author_id=author.id)
+    session.add(new_following)
+    await session.refresh(author)
+    await session.refresh(follower)
+    await session.commit()
+
+
+async def unfollow_author(session: AsyncSession, follower: User, author: User) -> None:
+    """The function unsubscribes the follower to the author"""
+    # check that the pairs (follower, author) in the database
+    get_following_q = await session.execute(
+        select(Following).where(
+            and_(Following.follower_id == follower.id, Following.author_id == author.id)
+        )
+    )
+    pair: Optional[Following] = get_following_q.scalars().first()
+
+    if not pair:
+        raise ValueError(
+            f"The follower {follower.id} has already been"
+            f" unsubscribed from the author {author.id}"
+        )
+    await session.delete(pair)
     await session.commit()
