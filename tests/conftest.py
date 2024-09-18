@@ -50,7 +50,7 @@ async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 async def user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str], None]:
     """Fixture. Returns id and api_key of test user"""
     async with db_session.begin():
-        user: User = User(api_key="test_api_key")
+        user: User = User(api_key="test_api_key", name="test_name_1")
         db_session.add(user)
         await db_session.commit()
     yield user.id, "test_api_key"
@@ -62,7 +62,7 @@ async def other_user_data(
 ) -> AsyncGenerator[Tuple[int, str], None]:
     """Fixture. Returns id and api_key of second test user"""
     async with db_session.begin():
-        user: User = User(api_key="other_test_api_key")
+        user: User = User(api_key="other_test_api_key", name="test_name_2")
         db_session.add(user)
         await db_session.commit()
     yield user.id, "other_test_api_key"
