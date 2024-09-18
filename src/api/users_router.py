@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -187,6 +188,13 @@ async def unfollow_user(
     return {"result": True}
 
 
+def _get_user_info(user: models.User) -> Dict[str, Any]:
+    logger.info("Start getting user info")
+    logger.debug("User followers: %s", str(user.followers))
+    logger.debug("The user is subscribed to the authors: %s", str(user.authors))
+    return user.full_json()
+
+
 @users_router.get(
     "/api/users/me",
     status_code=200,
@@ -208,12 +216,36 @@ async def unfollow_user(
 )
 async def get_current_user_info(
     user: models.User = Depends(check_api_key),
-    session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint for getting info about a current user
     """
-    logger.info("Start getting user info")
-    logger.debug("User followers: %s", str(user.followers))
-    logger.debug("The user is subscribed to the authors: %s", str(user.authors))
-    return user.full_json()
+    return _get_user_info(user)
+
+
+@users_router.get(
+    "/api/users/{user_id}",
+    status_code=200,
+    response_model=schemas.UserOutSchema,
+    responses={
+        404: {
+            "description": "User not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "NotFoundError",
+                        "error_message": "User {user_id} not found",
+                    }
+                }
+            },
+        },
+    },
+)
+async def get_user_info(
+    user: models.User = Depends(check_users_exists),
+):
+    """
+    The endpoint for getting info about user
+    """
+    return _get_user_info(user)
