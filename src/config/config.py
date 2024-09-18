@@ -24,7 +24,7 @@ def load_config(path: Union[str, None] = None) -> Config:
         db=DB(
             user=env("POSTGRES_USER"),
             password=env("POSTGRES_PASSWORD"),
-            host=env("POSTGRES_HOST")
+            host=env("POSTGRES_HOST"),
         ),
-        debug=bool(int(env("DEBUG")))
+        debug=bool(int(env("DEBUG"))),
     )

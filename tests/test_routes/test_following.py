@@ -8,9 +8,7 @@ BASE_ROUTE: str = "/api/users/{user_id}/follow?api_key={api_key}"
 
 @pytest.mark.asyncio
 async def test_follow_author(
-    client: AsyncClient,
-    user_data: Tuple[int, str],
-    other_user_data: Tuple[int, str]
+    client: AsyncClient, user_data: Tuple[int, str], other_user_data: Tuple[int, str]
 ) -> None:
     """Testing following author"""
     user_id, api_key = user_data
@@ -27,9 +25,7 @@ async def test_follow_author(
     )
     assert response.status_code == 400
     # try follow yourself
-    response = await client.post(
-        BASE_ROUTE.format(user_id=user_id, api_key=api_key)
-    )
+    response = await client.post(BASE_ROUTE.format(user_id=user_id, api_key=api_key))
     assert response.status_code == 403
 
 

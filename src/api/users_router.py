@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import models
 from src.database import queries as q
-from src.service.web import check_api_key, get_session, check_users_exists
-
+from src.service.web import check_api_key, check_users_exists, get_session
 
 users_router = APIRouter()
 
@@ -24,7 +23,8 @@ logger = logging.getLogger("routes_logger.users_logger")
                     "example": {
                         "result": False,
                         "error_type": "HTTPException",
-                        "error_message": "The user {follower.id} is already following the author {author.id}",
+                        "error_message": "The user {follower.id}"
+                        " is already following the author {author.id}",
                     }
                 }
             },
@@ -87,7 +87,7 @@ async def follow_user(
         logger.warning("You can't subscribe to yourself")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="A follower cannot subscribe to himself"
+            detail="A follower cannot subscribe to himself",
         )
     try:
         await q.follow_author(session, follower, author)

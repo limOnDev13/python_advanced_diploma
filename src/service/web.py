@@ -1,14 +1,14 @@
 from contextlib import asynccontextmanager
 from logging import getLogger
-from typing import Optional, List
+from typing import Optional
 
 from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config.config import Config, load_config
 from src.database import queries as q
 from src.database.models import Base, Session, Tweet, User, engine
 from src.service.exceptions import ForbiddenError, IdentificationError, NotFoundError
-from src.config.config import load_config, Config
 
 logger = getLogger("routes_logger")
 

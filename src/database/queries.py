@@ -3,16 +3,16 @@
 from logging import Logger
 from typing import Dict, List, Optional, Sequence
 
-from sqlalchemy import and_, select, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Image, Like, Tweet, User, Following
+from .models import Following, Image, Like, Tweet, User
 
 logger = Logger("query_logger")
 logger.setLevel("DEBUG")
 
 
-async def count_users(session: AsyncSession) -> int:
+async def count_users(session: AsyncSession) -> Optional[int]:
     """
     The function returns count users in db
     :param session: session object
@@ -179,13 +179,17 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
 async def follow_author(session: AsyncSession, follower: User, author: User) -> None:
     """The function subscribes the follower to the author"""
     # check that the pairs (follower, author) not in the database
-    get_following_q = await session.execute(select(Following).where(
-        and_(Following.follower_id == follower.id, Following.author_id == author.id))
+    get_following_q = await session.execute(
+        select(Following).where(
+            and_(Following.follower_id == follower.id, Following.author_id == author.id)
+        )
     )
     pair: Optional[Following] = get_following_q.scalars().first()
 
     if pair:
-        raise ValueError(f"The user {follower.id} is already following the author {author.id}")
+        raise ValueError(
+            f"The user {follower.id} is already following the author {author.id}"
+        )
     new_following = Following(follower_id=follower.id, author_id=author.id)
     session.add(new_following)
     await session.commit()

@@ -46,7 +46,7 @@ class User(Base):
         secondaryjoin="User.id==Following.author_id",
         back_populates="followers",
         cascade="all, delete",
-        lazy="joined"
+        lazy="joined",
     )
     followers: Mapped[Optional[List["User"]]] = relationship(
         "User",
@@ -55,7 +55,7 @@ class User(Base):
         secondaryjoin="User.id==Following.follower_id",
         back_populates="authors",
         cascade="all, delete",
-        lazy="joined"
+        lazy="joined",
     )
 
     def to_json(self) -> dict[str, Any]:
@@ -94,7 +94,9 @@ class Like(Base):
     __tablename__ = "likes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
     tweet_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("tweets.id"), nullable=False
     )
@@ -106,7 +108,13 @@ class Following(Base):
     __tablename__ = "following"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    follower_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    author_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    follower_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
 
-    __table_args__ = (UniqueConstraint("author_id", "follower_id", name="unq_following"),)
+    __table_args__ = (
+        UniqueConstraint("author_id", "follower_id", name="unq_following"),
+    )
