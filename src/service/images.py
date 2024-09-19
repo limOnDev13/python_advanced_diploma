@@ -10,6 +10,7 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.queries import add_image, get_images_by_ids
+from src.service.func import get_image_name_by_id
 
 image_logger = getLogger("image_logger")
 
@@ -102,21 +103,6 @@ async def validate_images_in_db(session: AsyncSession, images_ids: List[int]) ->
             )
 
 
-async def _get_image_name_by_id(image_id, images_path) -> Optional[str]:
-    """Function returns list of images names by ids"""
-    image_logger.info(
-        "Start searching image name with id %d in dir %s", image_id, images_path
-    )
-    for filename in await aiofiles.os.listdir(images_path):
-        image_logger.debug("Current filename - %s", filename)
-        if re.fullmatch(rf"{image_id}\..*?$", filename):
-            image_logger.debug("The file %s fits - returns", filename)
-            return filename
-        image_logger.debug("The file %s does not fit", filename)
-    image_logger.warning("No matches")
-    return None
-
-
 async def delete_images_by_ids(images_ids: List[int]) -> None:
     """Function deletes images from disk by ids"""
     # get current dir
@@ -125,10 +111,10 @@ async def delete_images_by_ids(images_ids: List[int]) -> None:
     images_dir: str = os.path.join(cur_dir_path, "..", "static", "images")
     # get images names
     images_names = await asyncio.gather(
-        *[_get_image_name_by_id(image_id, images_dir) for image_id in images_ids]
+        *[get_image_name_by_id(image_id, images_dir) for image_id in images_ids]
     )
     images_paths: List[str] = [
-        f"{images_dir}/{image_name}"
+        os.path.join(images_dir, image_name)
         for image_name in images_names
         if image_name is not None
     ]
