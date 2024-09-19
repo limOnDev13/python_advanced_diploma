@@ -1,6 +1,6 @@
 import asyncio
 from logging import getLogger
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -334,8 +334,7 @@ async def get_list_tweets(
     )  # mypy
 
     # assemble result
-    result: Dict[str, Any] = {
+    return {
         "result": True,
         "tweets": [await tweet.to_json() for tweet in following_tweets],
     }
-    return result
