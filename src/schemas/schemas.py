@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class TweetSchema(BaseModel):
+class TweetInSchema(BaseModel):
     tweet_data: str = Field(
         default=...,
         title="The text of the tweet",
@@ -24,6 +24,11 @@ class UserSchema(BaseModel):
     name: str = Field(default=..., description="User's name")
 
 
+class LikeSchema(BaseModel):
+    user_id: int = Field(default=..., description="The id of the user who put the like")
+    name: str = Field(default=..., description="User's name")
+
+
 class UserOutSchema(BaseModel):
     result: bool = True
     id: int = Field(default=..., description="User id")
@@ -34,6 +39,38 @@ class UserOutSchema(BaseModel):
     following: List[UserSchema] = Field(
         default_factory=list, description="List of authors subscribed to by users"
     )
+
+    class ConfigDict:
+        orm_mod = True
+
+
+class FullTweetSchema(BaseModel):
+    id: int = Field(
+        default=...,
+        description="Tweet id"
+    ),
+    content: str = Field(
+        default=...,
+        description="Tweet content (text)"
+    )
+    attachments: List[str] = Field(
+        default_factory=list,
+        description="A list of links to images attached to a tweet"
+    )
+    author: UserSchema = Field(
+        default=...,
+        description="Brief info about author"
+    )
+    likes: List[LikeSchema] = Field(
+        default_factory=list,
+        description="List with info about users like tweet"
+    )
+
+
+class TweetOutSchema(BaseModel):
+    result: bool = True
+    tweets: List[FullTweetSchema] = Field(
+        default_factory=list, description="List of tweets")
 
     class ConfigDict:
         orm_mod = True
