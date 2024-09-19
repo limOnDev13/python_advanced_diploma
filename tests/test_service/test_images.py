@@ -3,11 +3,8 @@ from typing import List, Optional
 
 import pytest
 
-from src.service.images import (
-    _file_extension,
-    delete_images_by_ids,
-)
 from src.service.func import get_image_name_by_id
+from src.service.images import _file_extension, delete_images_by_ids
 
 
 @pytest.mark.parametrize(

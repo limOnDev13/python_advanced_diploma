@@ -1,7 +1,7 @@
 """The module is responsible for the database models (tables)"""
 
-from typing import Any, List, Optional, Dict
 import os
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -100,19 +100,25 @@ class Tweet(Base):
         # add attachments
         cur_dir_path: str = os.path.dirname(__file__)
         images_dir: str = os.path.join(cur_dir_path, "..", "static", "images")
-        tweet_json["attachments"] = [
-            os.path.join(images_dir, await get_image_name_by_id(
-                image_id=image.id,
-                images_path=images_dir))
-            for image in self.images
-        ]
-        tweet_json['author'] = self.user.brief_json()
+        tweet_json["attachments"] = list()
+        if self.images is not None:  # mypy
+            for image in self.images:
+                image_name: Optional[str] = await get_image_name_by_id(
+                    image_id=image.id, images_path=images_dir
+                )
+                if image_name is None:
+                    image_name = ""
+                tweet_json["attachments"].append(os.path.join(images_dir, image_name))
+
+        tweet_json["author"] = self.user.brief_json()
 
         # add likes
-        tweet_json["likes"] = [
-            {"user_id": user.id, "name": user.name}
-            for user in self.users_like
-        ]
+        if self.users_like is not None:  # mypy
+            tweet_json["likes"] = [
+                {"user_id": user.id, "name": user.name} for user in self.users_like
+            ]
+        else:
+            tweet_json["likes"] = list()
 
         return tweet_json
 

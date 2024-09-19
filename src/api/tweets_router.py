@@ -1,6 +1,6 @@
-from logging import getLogger
-from typing import List, Optional, Dict, Any
 import asyncio
+from logging import getLogger
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -311,30 +311,31 @@ async def unlike_tweet(
 )
 async def get_list_tweets(
     user: models.User = Depends(check_api_key),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """
     An endpoint for receiving a feed with tweets from users
     whom he follows in descending order of popularity (by number of likes)
     """
     # create a list of tweets from authors that the user is subscribed to
-    following: List[models.User] = user.authors
+    following: Optional[List[models.User]] = user.authors
     following_tweets: List[models.Tweet] = list()
 
-    authors_tweets: List[List[models.Tweet]] = await asyncio.gather(*[
-        q.get_user_tweets(session, author)
-        for author in following
-    ])
+    if following is None:  # mypy
+        following = list()
+    authors_tweets: List[List[models.Tweet]] = await asyncio.gather(
+        *[q.get_user_tweets(session, author) for author in following]
+    )
     for author_tweets in authors_tweets:
         following_tweets.extend(author_tweets)
     # sort the list by popularity (by the number of likes)
-    following_tweets.sort(key=lambda tweet: len(tweet.users_like), reverse=True)
+    following_tweets.sort(
+        key=lambda tweet: len(tweet.users_like) if tweet.users_like else 0, reverse=True
+    )  # mypy
 
     # assemble result
     result: Dict[str, Any] = {
         "result": True,
-        "tweets": [
-            await tweet.to_json() for tweet in following_tweets
-        ]
+        "tweets": [await tweet.to_json() for tweet in following_tweets],
     }
     return result

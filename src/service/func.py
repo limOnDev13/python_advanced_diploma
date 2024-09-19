@@ -1,9 +1,8 @@
-from typing import Optional
-from logging import getLogger
 import re
+from logging import getLogger
+from typing import Optional
 
 import aiofiles.os
-
 
 logger = getLogger("image_logger.func")
 

@@ -235,6 +235,7 @@ async def unfollow_author(session: AsyncSession, follower: User, author: User) -
 
 async def get_user_tweets(session: AsyncSession, user: User) -> List[Tweet]:
     """Function returns list of tweets by user"""
-    get_user_tweet_q = await session.execute(select(Tweet).where(Tweet.user_id == user.id)
-                                             .options(selectinload(Tweet.user)))
+    get_user_tweet_q = await session.execute(
+        select(Tweet).where(Tweet.user_id == user.id).options(selectinload(Tweet.user))
+    )
     return list(get_user_tweet_q.unique().scalars().all())

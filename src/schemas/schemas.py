@@ -45,32 +45,23 @@ class UserOutSchema(BaseModel):
 
 
 class FullTweetSchema(BaseModel):
-    id: int = Field(
-        default=...,
-        description="Tweet id"
-    ),
-    content: str = Field(
-        default=...,
-        description="Tweet content (text)"
-    )
+    id: int = Field(default=..., description="Tweet id")
+    content: str = Field(default=..., description="Tweet content (text)")
     attachments: List[str] = Field(
         default_factory=list,
-        description="A list of links to images attached to a tweet"
+        description="A list of links to images attached to a tweet",
     )
-    author: UserSchema = Field(
-        default=...,
-        description="Brief info about author"
-    )
+    author: UserSchema = Field(default=..., description="Brief info about author")
     likes: List[LikeSchema] = Field(
-        default_factory=list,
-        description="List with info about users like tweet"
+        default_factory=list, description="List with info about users like tweet"
     )
 
 
 class TweetOutSchema(BaseModel):
     result: bool = True
     tweets: List[FullTweetSchema] = Field(
-        default_factory=list, description="List of tweets")
+        default_factory=list, description="List of tweets"
+    )
 
     class ConfigDict:
         orm_mod = True

@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Any, List
+from typing import Any, Dict, List, Tuple
 
 import pytest
 from httpx import AsyncClient
@@ -41,7 +41,9 @@ async def test_get_list_of_tweets_without_images(
     # 2) Create three tweets from other user
     new_tweet: Dict = {"tweet_data": "test_tweet_text"}
     for _ in range(3):
-        response = await client.post(f"/api/tweets?api_key={other_api_key}", json=new_tweet)
+        response = await client.post(
+            f"/api/tweets?api_key={other_api_key}", json=new_tweet
+        )
         assert response.status_code == 201
 
     # 3) Like twice 2, once 3 and don't like 1 tweets
@@ -89,7 +91,11 @@ async def test_get_list_of_tweets_with_images(
         response = await client.post(
             "/api/medias?api_key={}".format(other_api_key),
             files={
-                "image": ("test.jpg", open("tests/test_routes/images/test.jpg", "rb"), "multipart/form-data")
+                "image": (
+                    "test.jpg",
+                    open("tests/test_routes/images/test.jpg", "rb"),
+                    "multipart/form-data",
+                )
             },
         )
         assert response.status_code == 201
@@ -99,9 +105,11 @@ async def test_get_list_of_tweets_with_images(
     for num in range(3):
         new_tweet: Dict = {
             "tweet_data": "test_tweet_text",
-            "tweet_media_ids": images_ids[num * 3: (num + 1) * 3]
+            "tweet_media_ids": images_ids[num * 3 : (num + 1) * 3],
         }
-        response = await client.post(f"/api/tweets?api_key={other_api_key}", json=new_tweet)
+        response = await client.post(
+            f"/api/tweets?api_key={other_api_key}", json=new_tweet
+        )
         assert response.status_code == 201
 
     # 4) Like twice 2, once 3 and don't like 1 tweets
@@ -136,9 +144,7 @@ async def test_get_list_of_tweets_with_images(
 
 
 @pytest.mark.asyncio
-async def test_get_info_about_user_with_invalid_api_key(
-    client: AsyncClient
-) -> None:
+async def test_get_info_about_user_with_invalid_api_key(client: AsyncClient) -> None:
     """Negative test of getting tweet feed with invalid api_key"""
     invalid_api_key = "invalid_api_key"
 
