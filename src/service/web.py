@@ -82,7 +82,7 @@ async def check_api_key(
         logger.warning("api_key not exists")
         raise IdentificationError("api_key not exists")
 
-    logger.debug("Identification is successful")
+    logger.info("Identification is successful")
     return user
 
 

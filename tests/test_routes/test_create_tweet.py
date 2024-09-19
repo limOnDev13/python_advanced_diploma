@@ -15,7 +15,7 @@ async def test_create_new_tweet_without_images(
 ) -> None:
     """Testing sending multiple tweets without images"""
     user_id, api_key = user_data
-    new_tweet: Dict = {"tweet_data": "test_tweet_text", "user_id": user_id}
+    new_tweet: Dict = {"tweet_data": "test_tweet_text"}
     response = await client.post(BASE_ROUTE.format(api_key=api_key), json=new_tweet)
     assert response.status_code == 201
     tweet_id = response.json()["tweet_id"]
@@ -124,7 +124,6 @@ async def test_create_tweet_with_someone_else_images(
     # create tweet with images_ids
     new_tweet: Dict = {
         "tweet_data": "test_tweet_text",
-        "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
     response = await client.post(BASE_ROUTE.format(api_key=api_key), json=new_tweet)
@@ -133,7 +132,6 @@ async def test_create_tweet_with_someone_else_images(
     # create second tweet with same images_ids
     second_tweet: Dict = {
         "tweet_data": "test_tweet_text",
-        "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
     response = await client.post(BASE_ROUTE.format(api_key=api_key), json=second_tweet)
@@ -144,7 +142,6 @@ async def test_create_tweet_with_someone_else_images(
     # create tweet
     third_tweet: Dict = {
         "tweet_data": "test_tweet_text",
-        "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
     response = await client.post(BASE_ROUTE.format(api_key=api_key), json=third_tweet)
