@@ -1,5 +1,6 @@
 from logging import getLogger
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +54,7 @@ logger = getLogger("routes_logger.tweets_router")
     },
 )
 async def create_new_tweet(
-    tweet: schemas.TweetSchema,
+    tweet: schemas.TweetInSchema,
     response: Response,
     user: models.User = Depends(check_api_key),
     session: AsyncSession = Depends(get_session),
@@ -287,3 +288,53 @@ async def unlike_tweet(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     logger.info("Successful unlike")
     return {"result": True}
+
+
+@tweets_router.get(
+    "/api/tweets",
+    status_code=200,
+    response_model=schemas.TweetOutSchema,
+    responses={
+        401: {
+            "description": "api_key not exists",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "result": False,
+                        "error_type": "IdentificationError",
+                        "error_message": "api_key {api_key} not exists",
+                    }
+                }
+            },
+        },
+    },
+)
+async def get_list_tweets(
+    user: models.User = Depends(check_api_key),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    An endpoint for receiving a feed with tweets from users
+    whom he follows in descending order of popularity (by number of likes)
+    """
+    # create a list of tweets from authors that the user is subscribed to
+    following: List[models.User] = user.authors
+    following_tweets: List[models.Tweet] = list()
+
+    authors_tweets: List[List[models.Tweet]] = await asyncio.gather(*[
+        q.get_user_tweets(session, author)
+        for author in following
+    ])
+    for author_tweets in authors_tweets:
+        following_tweets.extend(author_tweets)
+    # sort the list by popularity (by the number of likes)
+    following_tweets.sort(key=lambda tweet: len(tweet.users_like), reverse=True)
+
+    # assemble result
+    result: Dict[str, Any] = {
+        "result": True,
+        "tweets": [
+            await tweet.to_json() for tweet in following_tweets
+        ]
+    }
+    return result
