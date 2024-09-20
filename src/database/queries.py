@@ -54,6 +54,7 @@ async def get_user_by_api_key(session: AsyncSession, api_key: str) -> Optional[U
         .where(User.api_key == api_key)
         .options(selectinload(User.followers))
         .options(selectinload(User.authors))
+        .options(selectinload(User.tweets))
     )
     return user.scalars().first()
 
@@ -160,6 +161,8 @@ async def like_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
 
     new_like = Like(user_id=user.id, tweet_id=tweet.id)
     session.add(new_like)
+    await session.refresh(user)
+    await session.refresh(tweet)
     await session.commit()
 
 
@@ -172,6 +175,8 @@ async def unlike_tweet(session: AsyncSession, tweet: Tweet, user: User) -> None:
         raise ValueError(f"The tweet {tweet.id} already has not a user {user.id} like.")
 
     await session.delete(like)
+    await session.refresh(user)
+    await session.refresh(tweet)
     await session.commit()
 
 
@@ -223,4 +228,14 @@ async def unfollow_author(session: AsyncSession, follower: User, author: User) -
             f" unsubscribed from the author {author.id}"
         )
     await session.delete(pair)
+    await session.refresh(author)
+    await session.refresh(follower)
     await session.commit()
+
+
+async def get_user_tweets(session: AsyncSession, user: User) -> List[Tweet]:
+    """Function returns list of tweets by user"""
+    get_user_tweet_q = await session.execute(
+        select(Tweet).where(Tweet.user_id == user.id).options(selectinload(Tweet.user))
+    )
+    return list(get_user_tweet_q.unique().scalars().all())
