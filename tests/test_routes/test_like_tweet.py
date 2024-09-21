@@ -3,7 +3,7 @@ from typing import Tuple
 import pytest
 from httpx import AsyncClient
 
-BASE_ROUTE: str = "/api/tweets/{tweet_id}/likes?api_key={api_key}"
+BASE_ROUTE: str = "/api/tweets/{tweet_id}/likes"
 
 
 @pytest.mark.asyncio
@@ -18,22 +18,22 @@ async def test_like_tweet(
 
     # like tweet with images
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images), headers={"api-key": api_key}
     )
     assert response.status_code == 200
     # try like same tweet
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images), headers={"api-key": api_key}
     )
     assert response.status_code == 400
     # like tweet without images
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_without_img, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_without_img), headers={"api-key": api_key}
     )
     assert response.status_code == 200
     # try like same tweet
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_without_img, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_without_img), headers={"api-key": api_key}
     )
     assert response.status_code == 400
 
@@ -51,17 +51,19 @@ async def test_like_someone_else_tweet(
 
     # owner likes tweet
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images), headers={"api-key": api_key}
     )
     assert response.status_code == 200
     # someone else likes tweet
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=other_api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images),
+        headers={"api-key": other_api_key},
     )
     assert response.status_code == 200
     # someone else likes same tweet
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=other_api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images),
+        headers={"api-key": other_api_key},
     )
     assert response.status_code == 400
 
@@ -75,13 +77,13 @@ async def test_like_tweet_with_invalid_api_key(
 
     # like tweet with images
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_images, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_images), headers={"api-key": api_key}
     )
     assert response.status_code == 401
 
     # like tweet without images
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=tweet_id_without_img, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_without_img), headers={"api-key": api_key}
     )
     assert response.status_code == 401
 
@@ -96,6 +98,6 @@ async def test_like_not_existing_tweet(
 
     # like tweet with images
     response = await client.post(
-        BASE_ROUTE.format(tweet_id=invalid_tweet_id, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=invalid_tweet_id), headers={"api-key": api_key}
     )
     assert response.status_code == 404

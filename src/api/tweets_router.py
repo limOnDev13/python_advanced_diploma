@@ -2,7 +2,7 @@ import asyncio
 from logging import getLogger
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import models
@@ -56,13 +56,15 @@ logger = getLogger("routes_logger.tweets_router")
 async def create_new_tweet(
     tweet: schemas.TweetInSchema,
     response: Response,
-    user: models.User = Depends(check_api_key),
+    api_key: str = Header(),
     session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint creates a new tweet.
     """
     logger.info("Start creating a new tweet")
+    # check api-key from headers
+    user: models.User = await check_api_key(api_key, session)
 
     # validate images_ids - images must be in db and not relate other tweets
     if tweet.tweet_media_ids:
@@ -126,14 +128,16 @@ async def create_new_tweet(
     },
 )
 async def delete_tweet(
+    api_key: str = Header(),
     tweet: models.Tweet = Depends(check_tweet_exists),
-    user: models.User = Depends(check_api_key),
     session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint deletes the tweet by id
     """
     logger.info("Start deleting the tweet")
+    # check api-key from headers
+    user: models.User = await check_api_key(api_key, session)
 
     # check that tweet relates user
     if tweet.user_id != user.id:
@@ -206,14 +210,17 @@ async def delete_tweet(
     },
 )
 async def like_tweet(
+    api_key: str = Header(),
     tweet: models.Tweet = Depends(check_tweet_exists),
-    user: models.User = Depends(check_api_key),
     session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint to like a tweet
     """
     logger.info("Start liking the tweet")
+    # check api-key from headers
+    user: models.User = await check_api_key(api_key, session)
+
     logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
     try:
         await q.like_tweet(session, tweet, user)
@@ -272,14 +279,17 @@ async def like_tweet(
     },
 )
 async def unlike_tweet(
+    api_key: str = Header(),
     tweet: models.Tweet = Depends(check_tweet_exists),
-    user: models.User = Depends(check_api_key),
     session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint to unlike a tweet
     """
     logger.info("Start unliking the tweet")
+    # check api-key from headers
+    user: models.User = await check_api_key(api_key, session)
+
     logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
     try:
         await q.unlike_tweet(session, tweet, user)

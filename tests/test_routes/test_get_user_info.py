@@ -54,7 +54,7 @@ async def test_get_info_about_other_user_with_followers(
 
     # add follower
     response = await client.post(
-        f"/api/users/{user_id}/follow?api_key={other_user_api_key}"
+        f"/api/users/{user_id}/follow", headers={"api-key": other_user_api_key}
     )
     assert response.status_code == 200
 
@@ -84,7 +84,9 @@ async def test_get_info_about_other_user_with_following(
     assert len(response_json["following"]) == 0
 
     # add following
-    response = await client.post(f"/api/users/{other_user_id}/follow?api_key={api_key}")
+    response = await client.post(
+        f"/api/users/{other_user_id}/follow", headers={"api-key": api_key}
+    )
     assert response.status_code == 200
 
     # get new info
@@ -119,10 +121,12 @@ async def test_get_info_about_other_user_with_following_and_followers(
     assert len(response_json["following"]) == 0
 
     # Subscribe both users to each other
-    response = await client.post(f"/api/users/{other_user_id}/follow?api_key={api_key}")
+    response = await client.post(
+        f"/api/users/{other_user_id}/follow", headers={"api-key": api_key}
+    )
     assert response.status_code == 200
     response = await client.post(
-        f"/api/users/{user_id}/follow?api_key={other_user_api_key}"
+        f"/api/users/{user_id}/follow", headers={"api-key": other_user_api_key}
     )
     assert response.status_code == 200
 

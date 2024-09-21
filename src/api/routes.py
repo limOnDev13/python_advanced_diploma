@@ -1,7 +1,11 @@
+import os
 from logging import getLogger
 from logging.config import dictConfig
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from src.api.medias_router import medias_router
 from src.api.tweets_router import tweets_router
@@ -14,6 +18,9 @@ dictConfig(dict_config)
 logger = getLogger("routes_logger")
 
 tags_metadata = [
+    {
+        "name": "main",
+    },
     {
         "name": "users",
         "description": "Operations with users.",
@@ -38,5 +45,15 @@ def create_app() -> FastAPI:
     app.include_router(tweets_router)
     app.include_router(medias_router)
     app.include_router(users_router)
+
+    # mount static
+    templates = Jinja2Templates(directory=os.path.join(".", "src", "static"))
+    app.mount(
+        "/", StaticFiles(directory=os.path.join(".", "src", "static")), name="static"
+    )
+
+    @app.get("/", response_class=HTMLResponse)
+    def main():
+        return templates.TemplateResponse("index.html")
 
     return app

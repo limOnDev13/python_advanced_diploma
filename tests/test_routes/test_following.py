@@ -3,7 +3,7 @@ from typing import Tuple
 import pytest
 from httpx import AsyncClient
 
-BASE_ROUTE: str = "/api/users/{user_id}/follow?api_key={api_key}"
+BASE_ROUTE: str = "/api/users/{user_id}/follow"
 
 
 @pytest.mark.asyncio
@@ -16,16 +16,18 @@ async def test_follow_author(
 
     # follow author
     response = await client.post(
-        BASE_ROUTE.format(user_id=other_user_id, api_key=api_key)
+        BASE_ROUTE.format(user_id=other_user_id), headers={"api-key": api_key}
     )
     assert response.status_code == 200
     # try again follow author
     response = await client.post(
-        BASE_ROUTE.format(user_id=other_user_id, api_key=api_key)
+        BASE_ROUTE.format(user_id=other_user_id), headers={"api-key": api_key}
     )
     assert response.status_code == 400
     # try follow yourself
-    response = await client.post(BASE_ROUTE.format(user_id=user_id, api_key=api_key))
+    response = await client.post(
+        BASE_ROUTE.format(user_id=user_id), headers={"api-key": api_key}
+    )
     assert response.status_code == 403
 
 
@@ -38,7 +40,7 @@ async def test_follow_with_invalid_api_key(
     invalid_api_key: str = "invalid_api_key"
 
     response = await client.post(
-        BASE_ROUTE.format(user_id=other_user_id, api_key=invalid_api_key)
+        BASE_ROUTE.format(user_id=other_user_id), headers={"api-key": invalid_api_key}
     )
     assert response.status_code == 401
 
@@ -52,6 +54,6 @@ async def test_follow_not_existing_user(
     invalid_user_id: int = 100
 
     response = await client.post(
-        BASE_ROUTE.format(user_id=invalid_user_id, api_key=api_key)
+        BASE_ROUTE.format(user_id=invalid_user_id), headers={"api-key": api_key}
     )
     assert response.status_code == 404

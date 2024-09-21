@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import models
@@ -74,7 +74,7 @@ logger = logging.getLogger("routes_logger.users_logger")
     },
 )
 async def follow_user(
-    follower: models.User = Depends(check_api_key),
+    api_key: str = Header(),
     author: models.User = Depends(check_users_exists),
     session: AsyncSession = Depends(get_session),
 ):
@@ -82,6 +82,9 @@ async def follow_user(
     Endpoint for a follower's subscription to the author
     """
     logger.info("Start following the user")
+    # check api-key from headers
+    follower: models.User = await check_api_key(api_key, session)
+
     logger.debug("follower.id=%d, author.id=%d", follower.id, author.id)
 
     # follower can't follow himself
@@ -161,7 +164,7 @@ async def follow_user(
     },
 )
 async def unfollow_user(
-    follower: models.User = Depends(check_api_key),
+    api_key: str = Header(),
     author: models.User = Depends(check_users_exists),
     session: AsyncSession = Depends(get_session),
 ):
@@ -169,6 +172,9 @@ async def unfollow_user(
     The endpoint for unsubscribing from the author
     """
     logger.info("Start unfollowing the author")
+    # check api-key from headers
+    follower: models.User = await check_api_key(api_key, session)
+
     logger.debug("follower.id=%d, author.id=%d", follower.id, author.id)
 
     # follower can't unfollow to himself
@@ -215,11 +221,15 @@ def _get_user_info(user: models.User) -> Dict[str, Any]:
     },
 )
 async def get_current_user_info(
-    user: models.User = Depends(check_api_key),
+    api_key: str = Header(), session: AsyncSession = Depends(get_session)
 ):
     """
     The endpoint for getting info about a current user
     """
+    logger.info("Getting info about current user")
+    # check api-key from headers
+    user: models.User = await check_api_key(api_key, session)
+
     return _get_user_info(user)
 
 
