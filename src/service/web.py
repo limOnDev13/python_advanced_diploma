@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from logging import getLogger
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.config import Config, load_config
@@ -58,7 +58,7 @@ async def get_session():
 
         # add user with api-key=test
         new_user: User = await q.create_user(
-            session, {"api_key": f"test", "name": f"test"}
+            session, {"api_key": "test", "name": "test"}
         )
         logger.debug("Add user with id %d and api_key %s", new_user.id, "test")
 
@@ -86,7 +86,7 @@ async def check_api_key(api_key: str, session: AsyncSession) -> User:
         logger.warning("api_key not exists")
         raise IdentificationError("api_key not exists")
 
-    logger.debug("Identification is successful")
+    logger.info("Identification is successful")
     return user
 
 

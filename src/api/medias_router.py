@@ -79,7 +79,7 @@ async def save_image(
         image_id: int = await upload_image(image, session)
         logger.debug("Image was uploaded, image_id=%s", image_id)
 
-        return {"result": True, "image_id": image_id}
+        return {"result": True, "media_id": image_id}
     except ValueError as exc:
         logger.warning("Image too large", exc_info=exc)
         raise HTTPException(detail=str(exc), status_code=403)

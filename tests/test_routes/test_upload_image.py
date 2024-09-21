@@ -19,7 +19,7 @@ async def test_add_image(client: AsyncClient, user_data: tuple[int, str]) -> Non
         headers={"api-key": api_key},
     )
     assert response.status_code == 201
-    image_id: int = response.json()["image_id"]
+    image_id: int = response.json()["media_id"]
     response = await client.post(
         BASE_ROUTE,
         files={
@@ -28,7 +28,7 @@ async def test_add_image(client: AsyncClient, user_data: tuple[int, str]) -> Non
         headers={"api-key": api_key},
     )
     assert response.status_code == 201
-    assert image_id + 1 == response.json()["image_id"]
+    assert image_id + 1 == response.json()["media_id"]
 
 
 @pytest.mark.asyncio

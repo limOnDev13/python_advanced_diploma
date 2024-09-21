@@ -102,7 +102,7 @@ async def image_id(client: AsyncClient, user_data) -> AsyncGenerator[int, None]:
         },
         headers={"api-key": api_key},
     )
-    image_id = response.json()["image_id"]
+    image_id = response.json()["media_id"]
     yield image_id
 
     # after the tests, need to delete the created image
@@ -130,7 +130,7 @@ async def images_ids(
             },
             headers={"api-key": api_key},
         )
-        images_ids.append(response.json()["image_id"])
+        images_ids.append(response.json()["media_id"])
     yield images_ids
 
     # after the tests, need to delete the created images
