@@ -76,7 +76,7 @@ async def tweet_id_without_img(
     user_id, api_key = user_data
     new_tweet: Dict = {"tweet_data": "test_tweet_text", "user_id": user_id}
     response = await client.post(
-        "/api/tweets?api_key={api_key}".format(api_key=api_key), json=new_tweet
+        "/api/tweets", json=new_tweet, headers={"api-key": api_key}
     )
     yield response.json()["tweet_id"]
 
@@ -92,7 +92,7 @@ async def image_id(client: AsyncClient, user_data) -> AsyncGenerator[int, None]:
     """Fixture. Returns id of uploaded image"""
     _, api_key = user_data
     response = await client.post(
-        "/api/medias?api_key={}".format(api_key),
+        "/api/medias",
         files={
             "image": (
                 "test.jpg",
@@ -100,6 +100,7 @@ async def image_id(client: AsyncClient, user_data) -> AsyncGenerator[int, None]:
                 "multipart/form-data",
             )
         },
+        headers={"api-key": api_key},
     )
     image_id = response.json()["image_id"]
     yield image_id
@@ -119,7 +120,7 @@ async def images_ids(
     images_ids: List[int] = list()
     for _ in range(3):
         response = await client.post(
-            "/api/medias?api_key={}".format(api_key),
+            "/api/medias",
             files={
                 "image": (
                     "test.jpg",
@@ -127,6 +128,7 @@ async def images_ids(
                     "multipart/form-data",
                 )
             },
+            headers={"api-key": api_key},
         )
         images_ids.append(response.json()["image_id"])
     yield images_ids
@@ -148,7 +150,7 @@ async def tweet_id_with_images(
         "tweet_media_ids": images_ids,
     }
     response = await client.post(
-        "/api/tweets?api_key={api_key}".format(api_key=api_key), json=new_tweet
+        "/api/tweets", json=new_tweet, headers={"api-key": api_key}
     )
 
     yield response.json()["tweet_id"]
@@ -164,7 +166,9 @@ async def tweet_id_with_like(
     """Fixture. Returns id of the tweet with like from user_data"""
     _, api_key = user_data
     # like this tweet
-    await client.post(f"/api/tweets/{tweet_id_with_images}/likes?api_key={api_key}")
+    await client.post(
+        f"/api/tweets/{tweet_id_with_images}/likes", headers={"api-key": api_key}
+    )
 
     yield tweet_id_with_images
 
@@ -177,5 +181,7 @@ async def follower_api_key_and_author_id(
     _, follower_api_key = user_data
     author_id, _ = other_user_data
     # follow author
-    await client.post(f"/api/users/{author_id}/follow?api_key={follower_api_key}")
+    await client.post(
+        f"/api/users/{author_id}/follow", headers={"api-key": follower_api_key}
+    )
     yield follower_api_key, author_id

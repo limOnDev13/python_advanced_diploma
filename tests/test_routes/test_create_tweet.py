@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.queries import get_images_by_ids
 
-BASE_ROUTE: str = "/api/tweets?api_key={api_key}"
+BASE_ROUTE: str = "/api/tweets"
 
 
 @pytest.mark.asyncio
@@ -16,11 +16,13 @@ async def test_create_new_tweet_without_images(
     """Testing sending multiple tweets without images"""
     user_id, api_key = user_data
     new_tweet: Dict = {"tweet_data": "test_tweet_text", "user_id": user_id}
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=new_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 201
     tweet_id = response.json()["tweet_id"]
     second_response = await client.post(
-        BASE_ROUTE.format(api_key=api_key), json=new_tweet
+        BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
     )
     assert second_response.status_code == 201
     assert tweet_id + 1 == second_response.json()["tweet_id"]
@@ -33,7 +35,9 @@ async def test_invalid_tweet_form(
     """Negative testing of sending an invalid tweet form"""
     _, api_key = user_data
     invalid_tweet: Dict = {"invalid_field": "smth"}
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=invalid_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=invalid_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 422
 
 
@@ -46,7 +50,7 @@ async def test_create_tweet_with_invalid_api_key(
     invalid_api_key = "invalid_api_key"
     new_tweet: Dict = {"tweet_data": "test_tweet_text", "user_id": user_id}
     response = await client.post(
-        BASE_ROUTE.format(api_key=invalid_api_key), json=new_tweet
+        BASE_ROUTE, json=new_tweet, headers={"api-key": invalid_api_key}
     )
     assert response.status_code == 401
 
@@ -67,7 +71,9 @@ async def test_create_tweet_with_images(
         "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=new_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 201
 
     # check images - image.tweet_id must be equal tweet id
@@ -95,7 +101,9 @@ async def test_create_tweet_with_non_existent_images(
         "user_id": user_id,
         "tweet_media_ids": images_ids_not_in_db,
     }
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=new_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 403
 
     # check - create tweet with existing and non-existing images
@@ -106,7 +114,9 @@ async def test_create_tweet_with_non_existent_images(
         "user_id": user_id,
         "tweet_media_ids": images_ids_not_in_db,
     }
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=second_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=second_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 403
 
 
@@ -127,7 +137,9 @@ async def test_create_tweet_with_someone_else_images(
         "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=new_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 201
 
     # create second tweet with same images_ids
@@ -136,7 +148,9 @@ async def test_create_tweet_with_someone_else_images(
         "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=second_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=second_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 403
 
     # create third tweet with same images and new image
@@ -147,5 +161,7 @@ async def test_create_tweet_with_someone_else_images(
         "user_id": user_id,
         "tweet_media_ids": images_ids,
     }
-    response = await client.post(BASE_ROUTE.format(api_key=api_key), json=third_tweet)
+    response = await client.post(
+        BASE_ROUTE, json=third_tweet, headers={"api-key": api_key}
+    )
     assert response.status_code == 403

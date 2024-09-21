@@ -3,7 +3,7 @@ from typing import Tuple
 import pytest
 from httpx import AsyncClient
 
-BASE_ROUTE: str = "/api/tweets/{tweet_id}/likes?api_key={api_key}"
+BASE_ROUTE: str = "/api/tweets/{tweet_id}/likes"
 
 
 @pytest.mark.asyncio
@@ -15,12 +15,12 @@ async def test_unlike_tweet(
 
     # unlike a tweet
     response = await client.delete(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_like, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_like), headers={"api-key": api_key}
     )
     assert response.status_code == 200
     # unlike this tweet again
     response = await client.delete(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_like, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_like), headers={"api-key": api_key}
     )
     assert response.status_code == 400
 
@@ -34,7 +34,7 @@ async def test_unlike_tweet_with_invalid_api_key(
 
     # like tweet with images
     response = await client.delete(
-        BASE_ROUTE.format(tweet_id=tweet_id_with_like, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=tweet_id_with_like), headers={"api-key": api_key}
     )
     assert response.status_code == 401
 
@@ -49,6 +49,6 @@ async def test_unlike_not_existing_tweet(
 
     # unlike tweet with images
     response = await client.delete(
-        BASE_ROUTE.format(tweet_id=invalid_tweet_id, api_key=api_key)
+        BASE_ROUTE.format(tweet_id=invalid_tweet_id), headers={"api-key": api_key}
     )
     assert response.status_code == 404
