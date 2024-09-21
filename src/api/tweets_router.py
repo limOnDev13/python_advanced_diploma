@@ -320,13 +320,18 @@ async def unlike_tweet(
     },
 )
 async def get_list_tweets(
-    user: models.User = Depends(check_api_key),
+    api_key: str = Header(),
     session: AsyncSession = Depends(get_session),
 ):
     """
     An endpoint for receiving a feed with tweets from users
     whom he follows in descending order of popularity (by number of likes)
     """
+    logger.info("Getting tweet feed")
+    # check api_key
+    # check api-key from headers
+    user: models.User = await check_api_key(api_key, session)
+
     # create a list of tweets from authors that the user is subscribed to
     following: Optional[List[models.User]] = user.authors
     following_tweets: List[models.Tweet] = list()
