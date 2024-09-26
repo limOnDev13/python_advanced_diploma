@@ -41,7 +41,7 @@ async def test_unlike_tweet_with_invalid_api_key(
 
 @pytest.mark.asyncio
 async def test_unlike_not_existing_tweet(
-    client: AsyncClient, user_data: Tuple[int, int]
+    client: AsyncClient, user_data: Tuple[int, str]
 ) -> None:
     """Negative test of unliking not existing tweet"""
     _, api_key = user_data
