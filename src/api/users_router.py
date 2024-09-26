@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import models
 from src.database import queries as q
 from src.schemas import schemas
-from src.service.web import check_api_key, check_users_exist, get_session
+from src.service.web import check_api_key, check_users_exist
 
 users_router = APIRouter(tags=["users"])
 

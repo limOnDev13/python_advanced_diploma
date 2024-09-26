@@ -1,18 +1,23 @@
 import os
-from typing import AsyncGenerator, Dict, Generator, List, Tuple, Optional, Awaitable
+from typing import AsyncGenerator, Callable, Dict, Generator, List, Tuple
 
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, AsyncEngine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
+import src.database.queries as q
 from src.api.routes import create_app
 from src.config.config import load_config
-from src.database.models import Base, User
+from src.database.models import Base
 from src.service.images import delete_images_by_ids
 from src.service.web import get_session
-import src.database.queries as q
 
 db_config = load_config()
 DB_URL: str = db_config.db.url
@@ -30,7 +35,7 @@ async def engine():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def db_session(engine: AsyncEngine) -> AsyncGenerator[Awaitable, None]:
+async def db_session(engine: AsyncEngine) -> AsyncGenerator[Callable, None]:
     """Start a test database session"""
     Session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     session: AsyncSession = Session()
@@ -45,7 +50,6 @@ async def db_session(engine: AsyncEngine) -> AsyncGenerator[Awaitable, None]:
 
     yield overrides_get_session
     await session.close()
-
 
 
 @pytest.fixture(scope="function")

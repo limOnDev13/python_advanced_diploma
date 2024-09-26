@@ -4,8 +4,6 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.queries import get_images_by_ids
-
 BASE_ROUTE: str = "/api/tweets"
 
 
@@ -32,7 +30,8 @@ async def test_create_new_tweet_without_images(
 
 @pytest.mark.asyncio
 async def test_invalid_tweet_form(
-    user_data: Tuple[int, str], client: AsyncClient,
+    user_data: Tuple[int, str],
+    client: AsyncClient,
 ) -> None:
     """Negative testing of sending an invalid tweet form"""
     _, api_key = user_data
