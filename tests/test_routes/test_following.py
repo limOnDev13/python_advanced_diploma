@@ -47,7 +47,7 @@ async def test_follow_with_invalid_api_key(
 
 @pytest.mark.asyncio
 async def test_follow_not_existing_user(
-    client: AsyncClient, user_data: Tuple[int, int]
+    client: AsyncClient, user_data: Tuple[int, str]
 ) -> None:
     """Negative test of following not existing user"""
     _, api_key = user_data
