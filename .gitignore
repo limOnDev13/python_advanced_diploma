@@ -7,4 +7,5 @@ src/.env
 /.sshkeys/
 /.env
 # ignore local images
-/src/static/images/*
+/client/static/images/*
+/db/

@@ -1,12 +1,14 @@
 from logging import getLogger
 
-from fastapi import APIRouter, Depends, Header, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.service.images import upload_image, validate_image
-from src.service.web import check_api_key, get_session
+from src.service.web import check_api_key
 
-medias_router: APIRouter = APIRouter(tags=["medias"])
+medias_router: APIRouter = APIRouter(
+    tags=["medias"], dependencies=[Depends(check_api_key)]
+)
 
 logger = getLogger("routes_logger.medias_logger")
 
@@ -59,17 +61,13 @@ logger = getLogger("routes_logger.medias_logger")
         },
     },
 )
-async def save_image(
-    image: UploadFile,
-    api_key: str = Header(),
-    session: AsyncSession = Depends(get_session),
-):
+async def save_image(image: UploadFile, request: Request):
     """
     The endpoint saves the image to disk
     """
     logger.info("Start saving image")
     # check api-key from headers
-    await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
 
     try:
         logger.debug("Validating image")

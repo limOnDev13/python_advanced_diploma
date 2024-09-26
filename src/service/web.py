@@ -1,8 +1,9 @@
+import re
 from contextlib import asynccontextmanager
 from logging import getLogger
 from typing import Optional
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.config import Config, load_config
@@ -25,7 +26,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Startup")
     async with engine.begin() as conn:
-        if config.debug:
+        if config.env == "debug" or config.env == "test":
             logger.debug("drop all")
             await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -37,11 +38,11 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
-async def get_session():
+async def get_session(request: Request):
     logger.info("Getting session")
     session: AsyncSession = Session()
 
-    if config.debug:
+    if config.env == "debug":
         # Check count users in db
         num_users: Optional[int] = await q.count_users(session)
         logger.debug("There are %d users in the table", num_users)
@@ -55,44 +56,54 @@ async def get_session():
                 logger.debug(
                     "Add user with id %d and api_key api_key_%d", new_user.id, num
                 )
+    elif config.env == "prod":
+        # Check count users in db
+        num_users = await q.count_users(session)
+        logger.debug("There are %d users in the table", num_users)
 
-        # add user with api-key=test
-        new_user: User = await q.create_user(
-            session, {"api_key": "test", "name": "test"}
-        )
-        logger.debug("Add user with id %d and api_key %s", new_user.id, "test")
+        # There must be at least one user with api_key = test
+        if num_users is not None and num_users == 0:  # mypy
+            new_user = await q.create_user(
+                session, {"api_key": "test", "name": "test_name"}
+            )
+            logger.debug("Add user with id %d and api_key %s", new_user.id, "test")
 
     try:
         logger.debug("Before yield session")
-        yield session
-        logger.debug("After yield session")
+        request.state.session = session
+        yield
     finally:
+        logger.debug("After yield session")
         await session.close()
 
 
-async def check_api_key(api_key: str, session: AsyncSession) -> User:
+async def check_api_key(request: Request, api_key: str = Header()) -> None:
     """
     The function checks if the given api_key is in the database.
-    :param api_key: The key is the user ID
-    :param session: async session object
+    :param request: Request object
+    :param api_key: user api key
     :raise HTTPException: if api_key is not in database
-    :return: user if api_key is in the database
-    :rtype: User
+    :return: None
     """
-    logger.info("Start checking api_key")
-    user: Optional[User] = await q.get_user_by_api_key(session, api_key)
+    if request.url.path.startswith("/api") and not re.search(
+        r"/api/users/\d+$", request.url.path
+    ):
+        logger.info("Start checking api_key")
+        session: AsyncSession = request.state.session
+        if not api_key:
+            raise HTTPException(status_code=400, detail="api_key is None")
+        user: Optional[User] = await q.get_user_by_api_key(session, api_key)
 
-    if not user:
-        logger.warning("api_key not exists")
-        raise IdentificationError("api_key not exists")
+        if not user:
+            logger.warning("api_key not exists")
+            raise IdentificationError("api_key not exists")
 
-    logger.info("Identification is successful")
-    return user
+        logger.info("Identification is successful")
+
+        request.state.current_user = user
 
 
-async def check_users_exists(
-    user_id: int, session: AsyncSession = Depends(get_session)
-) -> User:
+async def check_users_exist(user_id: int, session: AsyncSession) -> User:
     """
     The function checks that user with user_id exists.
     :param user_id: the user ID
@@ -112,9 +123,7 @@ async def check_users_exists(
     return user
 
 
-async def check_tweet_exists(
-    tweet_id: int, session: AsyncSession = Depends(get_session)
-) -> Tweet:
+async def check_tweet_exists(tweet_id: int, session: AsyncSession) -> Tweet:
     """Function checks that tweet_id exists"""
     tweet: Optional[Tweet] = await q.get_tweet_by_id(session, tweet_id)
     if not tweet:
