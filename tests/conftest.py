@@ -3,36 +3,41 @@ from typing import AsyncGenerator, Dict, Generator, List, Tuple
 
 import pytest
 import pytest_asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.api.routes import create_app
-from src.database.models import DB_URL, Base, User
+from src.config.config import load_config
+from src.database.models import Base, User
 from src.service.images import delete_images_by_ids
 from src.service.web import get_session
 
+db_config = load_config()
+DB_URL: str = db_config.db.url
+
 
 @pytest_asyncio.fixture(scope="function")
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
+async def db_session(request: Request) -> AsyncGenerator[None, None]:
     """Start a test database session"""
     engine = create_async_engine(DB_URL)
     Session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-    session = Session()
+    session: AsyncSession = Session()
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    yield session
+    request.state.session = session
+    yield
     await session.close()
 
 
 @pytest.fixture(scope="function")
-def test_app(db_session: AsyncSession) -> Generator[FastAPI, None, None]:
+def test_app(db_session) -> Generator[FastAPI, None, None]:
     """Create a test_app with overridden dependencies"""
     _app: FastAPI = create_app()
-    _app.dependency_overrides[get_session] = lambda: db_session
+    _app.dependency_overrides[get_session] = db_session
     yield _app
     _app.dependency_overrides.clear()
 
@@ -40,6 +45,7 @@ def test_app(db_session: AsyncSession) -> Generator[FastAPI, None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create a http client"""
+    os.environ["ENV"] = "test"
     async with AsyncClient(
         transport=ASGITransport(app=test_app), base_url="http://localhost:8000"
     ) as client:
@@ -84,7 +90,7 @@ async def tweet_id_without_img(
 @pytest.fixture(scope="function")
 def images_path() -> Generator[str, None, None]:
     """Fixture. Returns path to images"""
-    yield os.path.join(os.path.abspath("."), "src", "static", "images")
+    yield os.path.join(os.path.abspath("."), "client", "static", "images")
 
 
 @pytest_asyncio.fixture(scope="function")
