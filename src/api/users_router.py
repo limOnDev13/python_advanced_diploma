@@ -253,9 +253,10 @@ async def get_current_user_info(
         },
     },
 )
-async def get_user_info(user_id: int, session: AsyncSession = Depends(get_session)):
+async def get_user_info(user_id: int, request: Request):
     """
     The endpoint for getting info about user
     """
+    session = request.state.session
     user: models.User = await check_users_exist(user_id, session)
     return _get_user_info(user)
