@@ -1,13 +1,13 @@
 import logging
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import models
 from src.database import queries as q
 from src.schemas import schemas
-from src.service.web import check_api_key, check_users_exists, get_session
+from src.service.web import check_api_key, check_users_exist, get_session
 
 users_router = APIRouter(tags=["users"])
 
@@ -17,6 +17,7 @@ logger = logging.getLogger("routes_logger.users_logger")
 @users_router.post(
     "/api/users/{user_id}/follow",
     status_code=200,
+    dependencies=[Depends(check_api_key)],
     responses={
         400: {
             "description": "The user has already subscribed to the author",
@@ -73,17 +74,14 @@ logger = logging.getLogger("routes_logger.users_logger")
         },
     },
 )
-async def follow_user(
-    api_key: str = Header(),
-    author: models.User = Depends(check_users_exists),
-    session: AsyncSession = Depends(get_session),
-):
+async def follow_user(request: Request, user_id: int):
     """
     Endpoint for a follower's subscription to the author
     """
     logger.info("Start following the user")
-    # check api-key from headers
-    follower: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    follower: models.User = request.state.current_user
+    author: models.User = await check_users_exist(user_id, session)
 
     logger.debug("follower.id=%d, author.id=%d", follower.id, author.id)
 
@@ -107,6 +105,7 @@ async def follow_user(
 @users_router.delete(
     "/api/users/{user_id}/follow",
     status_code=200,
+    dependencies=[Depends(check_api_key)],
     responses={
         400: {
             "description": "The user has already unsubscribed from the author",
@@ -164,16 +163,17 @@ async def follow_user(
     },
 )
 async def unfollow_user(
-    api_key: str = Header(),
-    author: models.User = Depends(check_users_exists),
-    session: AsyncSession = Depends(get_session),
+    request: Request,
+    user_id: int,
 ):
     """
     The endpoint for unsubscribing from the author
     """
     logger.info("Start unfollowing the author")
     # check api-key from headers
-    follower: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    follower: models.User = request.state.current_user
+    author: models.User = await check_users_exist(user_id, session)
 
     logger.debug("follower.id=%d, author.id=%d", follower.id, author.id)
 
@@ -205,6 +205,7 @@ def _get_user_info(user: models.User) -> Dict[str, Any]:
     "/api/users/me",
     status_code=200,
     response_model=schemas.UserOutSchema,
+    dependencies=[Depends(check_api_key)],
     responses={
         401: {
             "description": "api_key not exists",
@@ -221,14 +222,14 @@ def _get_user_info(user: models.User) -> Dict[str, Any]:
     },
 )
 async def get_current_user_info(
-    api_key: str = Header(), session: AsyncSession = Depends(get_session)
+    request: Request,
 ):
     """
     The endpoint for getting info about a current user
     """
     logger.info("Getting info about current user")
     # check api-key from headers
-    user: models.User = await check_api_key(api_key, session)
+    user: models.User = request.state.current_user
 
     return _get_user_info(user)
 
@@ -252,10 +253,9 @@ async def get_current_user_info(
         },
     },
 )
-async def get_user_info(
-    user: models.User = Depends(check_users_exists),
-):
+async def get_user_info(user_id: int, session: AsyncSession = Depends(get_session)):
     """
     The endpoint for getting info about user
     """
+    user: models.User = await check_users_exist(user_id, session)
     return _get_user_info(user)
