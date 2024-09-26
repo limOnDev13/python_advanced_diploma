@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Startup")
     async with engine.begin() as conn:
-        if config.env == "debug":
+        if config.env == "debug" or config.env == "test":
             logger.debug("drop all")
             await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -72,8 +72,8 @@ async def get_session(request: Request):
         logger.debug("Before yield session")
         request.state.session = session
         yield
-        logger.debug("After yield session")
     finally:
+        logger.debug("After yield session")
         await session.close()
 
 
