@@ -15,7 +15,7 @@ config = context.config
 db_config: DB = load_config().db
 config.set_main_option(
     "sqlalchemy.url",
-    f"postgresql+asyncpg://{db_config.user}:{db_config.password}@{db_config.host}",
+    db_config.url,
 )
 
 # Interpret the config file for Python logging.
