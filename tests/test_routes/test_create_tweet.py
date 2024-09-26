@@ -20,6 +20,8 @@ async def test_create_new_tweet_without_images(
         BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
     )
     assert response.status_code == 201
+    assert response.json()["result"] == "true"
+
     tweet_id = response.json()["tweet_id"]
     second_response = await client.post(
         BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
@@ -53,6 +55,9 @@ async def test_create_tweet_with_invalid_api_key(
         BASE_ROUTE, json=new_tweet, headers={"api-key": invalid_api_key}
     )
     assert response.status_code == 401
+    assert response.json()["result"] is False
+    assert "error_type" in response.json()
+    assert "error_message" in response.json()
 
 
 @pytest.mark.asyncio
@@ -75,6 +80,7 @@ async def test_create_tweet_with_images(
         BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
     )
     assert response.status_code == 201
+    assert response.json()["result"] == "true"
 
     # check images - image.tweet_id must be equal tweet id
     images = await get_images_by_ids(db_session, images_ids)
@@ -105,6 +111,9 @@ async def test_create_tweet_with_non_existent_images(
         BASE_ROUTE, json=new_tweet, headers={"api-key": api_key}
     )
     assert response.status_code == 403
+    assert response.json()["result"] is False
+    assert "error_type" in response.json()
+    assert "error_message" in response.json()
 
     # check - create tweet with existing and non-existing images
     images_ids_not_in_db.extend(images_ids)
@@ -118,6 +127,9 @@ async def test_create_tweet_with_non_existent_images(
         BASE_ROUTE, json=second_tweet, headers={"api-key": api_key}
     )
     assert response.status_code == 403
+    assert response.json()["result"] is False
+    assert "error_type" in response.json()
+    assert "error_message" in response.json()
 
 
 @pytest.mark.asyncio
@@ -152,6 +164,9 @@ async def test_create_tweet_with_someone_else_images(
         BASE_ROUTE, json=second_tweet, headers={"api-key": api_key}
     )
     assert response.status_code == 403
+    assert response.json()["result"] is False
+    assert "error_type" in response.json()
+    assert "error_message" in response.json()
 
     # create third tweet with same images and new image
     images_ids.append(image_id)
@@ -165,3 +180,6 @@ async def test_create_tweet_with_someone_else_images(
         BASE_ROUTE, json=third_tweet, headers={"api-key": api_key}
     )
     assert response.status_code == 403
+    assert response.json()["result"] is False
+    assert "error_type" in response.json()
+    assert "error_message" in response.json()
