@@ -2,7 +2,7 @@ import asyncio
 from logging import getLogger
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import models
@@ -10,9 +10,11 @@ from src.database import queries as q
 from src.schemas import schemas
 from src.service.exceptions import ForbiddenError
 from src.service.images import delete_images_by_ids, validate_images_in_db
-from src.service.web import check_api_key, check_tweet_exists, get_session
+from src.service.web import check_api_key, check_tweet_exists
 
-tweets_router: APIRouter = APIRouter(tags=["tweets"])
+tweets_router: APIRouter = APIRouter(
+    tags=["tweets"], dependencies=[Depends(check_api_key)]
+)
 
 logger = getLogger("routes_logger.tweets_router")
 
@@ -55,16 +57,16 @@ logger = getLogger("routes_logger.tweets_router")
 )
 async def create_new_tweet(
     tweet: schemas.TweetInSchema,
+    request: Request,
     response: Response,
-    api_key: str = Header(),
-    session: AsyncSession = Depends(get_session),
 ):
     """
     The endpoint creates a new tweet.
     """
     logger.info("Start creating a new tweet")
     # check api-key from headers
-    user: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    user: models.User = request.state.current_user
 
     # validate images_ids - images must be in db and not relate other tweets
     if tweet.tweet_media_ids:
@@ -127,17 +129,14 @@ async def create_new_tweet(
         },
     },
 )
-async def delete_tweet(
-    api_key: str = Header(),
-    tweet: models.Tweet = Depends(check_tweet_exists),
-    session: AsyncSession = Depends(get_session),
-):
+async def delete_tweet(request: Request, tweet_id: int):
     """
     The endpoint deletes the tweet by id
     """
     logger.info("Start deleting the tweet")
-    # check api-key from headers
-    user: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    user: models.User = request.state.current_user
+    tweet: models.Tweet = await check_tweet_exists(tweet_id, session)
 
     # check that tweet relates user
     if tweet.user_id != user.id:
@@ -209,17 +208,15 @@ async def delete_tweet(
         },
     },
 )
-async def like_tweet(
-    api_key: str = Header(),
-    tweet: models.Tweet = Depends(check_tweet_exists),
-    session: AsyncSession = Depends(get_session),
-):
+async def like_tweet(request: Request, tweet_id: int):
     """
     The endpoint to like a tweet
     """
     logger.info("Start liking the tweet")
     # check api-key from headers
-    user: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    user: models.User = request.state.current_user
+    tweet: models.Tweet = await check_tweet_exists(tweet_id, session)
 
     logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
     try:
@@ -278,17 +275,15 @@ async def like_tweet(
         },
     },
 )
-async def unlike_tweet(
-    api_key: str = Header(),
-    tweet: models.Tweet = Depends(check_tweet_exists),
-    session: AsyncSession = Depends(get_session),
-):
+async def unlike_tweet(request: Request, tweet_id: int):
     """
     The endpoint to unlike a tweet
     """
     logger.info("Start unliking the tweet")
     # check api-key from headers
-    user: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    user: models.User = request.state.current_user
+    tweet: models.Tweet = await check_tweet_exists(tweet_id, session)
 
     logger.debug("Tweet.id=%d, User.id=%d", tweet.id, user.id)
     try:
@@ -319,10 +314,7 @@ async def unlike_tweet(
         },
     },
 )
-async def get_list_tweets(
-    api_key: str = Header(),
-    session: AsyncSession = Depends(get_session),
-):
+async def get_list_tweets(request: Request):
     """
     An endpoint for receiving a feed with tweets from users
     whom he follows in descending order of popularity (by number of likes)
@@ -330,7 +322,8 @@ async def get_list_tweets(
     logger.info("Getting tweet feed")
     # check api_key
     # check api-key from headers
-    user: models.User = await check_api_key(api_key, session)
+    session: AsyncSession = request.state.session
+    user: models.User = request.state.current_user
 
     # create a list of tweets from authors that the user is subscribed to
     following: Optional[List[models.User]] = user.authors
