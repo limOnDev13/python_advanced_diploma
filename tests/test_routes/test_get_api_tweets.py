@@ -35,21 +35,25 @@ async def test_get_list_of_tweets_without_images(
     other_user_id, other_api_key = other_user_data
 
     # 1) Subscribe one user to another
-    response = await client.post(f"/api/users/{other_user_id}/follow", headers={"api-key": api_key})
+    response = await client.post(
+        f"/api/users/{other_user_id}/follow", headers={"api-key": api_key}
+    )
     assert response.status_code == 200
 
     # 2) Create three tweets from other user
     new_tweet: Dict = {"tweet_data": "test_tweet_text"}
     for _ in range(3):
         response = await client.post(
-            f"/api/tweets", json=new_tweet, headers={"api-key": other_api_key}
+            "/api/tweets", json=new_tweet, headers={"api-key": other_api_key}
         )
         assert response.status_code == 201
 
     # 3) Like twice 2, once 3 and don't like 1 tweets
     response = await client.post(f"/api/tweets/{2}/likes", headers={"api-key": api_key})
     assert response.status_code == 200
-    response = await client.post(f"/api/tweets/{2}/likes", headers={"api-key": other_api_key})
+    response = await client.post(
+        f"/api/tweets/{2}/likes", headers={"api-key": other_api_key}
+    )
     assert response.status_code == 200
     response = await client.post(f"/api/tweets/{3}/likes", headers={"api-key": api_key})
     assert response.status_code == 200
@@ -82,7 +86,9 @@ async def test_get_list_of_tweets_with_images(
     other_user_id, other_api_key = other_user_data
 
     # 1) Subscribe one user to another
-    response = await client.post(f"/api/users/{other_user_id}/follow", headers={"api-key": api_key})
+    response = await client.post(
+        f"/api/users/{other_user_id}/follow", headers={"api-key": api_key}
+    )
     assert response.status_code == 200
 
     # 2) Add 9 images
@@ -97,7 +103,7 @@ async def test_get_list_of_tweets_with_images(
                     "multipart/form-data",
                 )
             },
-            headers={"api-key": other_api_key}
+            headers={"api-key": other_api_key},
         )
         assert response.status_code == 201
         images_ids.append(response.json()["media_id"])
@@ -109,14 +115,16 @@ async def test_get_list_of_tweets_with_images(
             "tweet_media_ids": images_ids[num * 3 : (num + 1) * 3],
         }
         response = await client.post(
-            f"/api/tweets", json=new_tweet, headers={"api-key": other_api_key}
+            "/api/tweets", json=new_tweet, headers={"api-key": other_api_key}
         )
         assert response.status_code == 201
 
     # 4) Like twice 2, once 3 and don't like 1 tweets
     response = await client.post(f"/api/tweets/{2}/likes", headers={"api-key": api_key})
     assert response.status_code == 200
-    response = await client.post(f"/api/tweets/{2}/likes", headers={"api-key": other_api_key})
+    response = await client.post(
+        f"/api/tweets/{2}/likes", headers={"api-key": other_api_key}
+    )
     assert response.status_code == 200
     response = await client.post(f"/api/tweets/{3}/likes", headers={"api-key": api_key})
     assert response.status_code == 200
