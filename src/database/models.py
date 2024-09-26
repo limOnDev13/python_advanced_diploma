@@ -11,10 +11,7 @@ from src.config.config import Config, load_config
 from src.service.func import get_image_name_by_id
 
 config: Config = load_config()
-DB_URL: str = (
-    f"postgresql+asyncpg://"
-    f"{config.db.user}:{config.db.password}@{config.db.host}:5432"
-)
+DB_URL: str = config.db.url
 engine = create_async_engine(DB_URL)
 Session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
@@ -99,7 +96,9 @@ class Tweet(Base):
 
         # add attachments
         cur_dir_path: str = os.path.dirname(__file__)
-        images_dir: str = os.path.join(cur_dir_path, "..", "static", "images")
+        images_dir: str = os.path.join(
+            cur_dir_path, "..", "..", "client", "static", "images"
+        )
         tweet_json["attachments"] = list()
         if self.images is not None:  # mypy
             for image in self.images:
