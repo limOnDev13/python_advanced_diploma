@@ -2,8 +2,9 @@ services:
   postgres:
     image: postgres:13.3
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # DEBUG
+      - POSTGRES_USER=debug
+      - POSTGRES_PASSWORD=debug
       - POSTGRES_HOST=${POSTGRES_HOST}
     ports:
       - '5432:5432'
