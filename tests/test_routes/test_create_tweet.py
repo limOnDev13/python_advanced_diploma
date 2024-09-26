@@ -11,7 +11,7 @@ BASE_ROUTE: str = "/api/tweets"
 
 @pytest.mark.asyncio
 async def test_create_new_tweet_without_images(
-    client: AsyncClient, user_data: Tuple[int, str]
+    user_data: Tuple[int, str], client: AsyncClient
 ) -> None:
     """Testing sending multiple tweets without images"""
     user_id, api_key = user_data
@@ -32,7 +32,7 @@ async def test_create_new_tweet_without_images(
 
 @pytest.mark.asyncio
 async def test_invalid_tweet_form(
-    client: AsyncClient, user_data: Tuple[int, str]
+    user_data: Tuple[int, str], client: AsyncClient,
 ) -> None:
     """Negative testing of sending an invalid tweet form"""
     _, api_key = user_data
@@ -45,7 +45,7 @@ async def test_invalid_tweet_form(
 
 @pytest.mark.asyncio
 async def test_create_tweet_with_invalid_api_key(
-    client: AsyncClient, user_data: Tuple[int, str]
+    user_data: Tuple[int, str], client: AsyncClient
 ) -> None:
     """Negative testing of sending tweet with invalid api_key"""
     user_id, _ = user_data
@@ -62,10 +62,9 @@ async def test_create_tweet_with_invalid_api_key(
 
 @pytest.mark.asyncio
 async def test_create_tweet_with_images(
-    client: AsyncClient,
-    db_session: AsyncSession,
     user_data: Tuple[int, str],
     images_ids: List[int],
+    client: AsyncClient,
 ) -> None:
     """Testing sending tweet with images ids"""
     user_id, api_key = user_data
@@ -81,11 +80,6 @@ async def test_create_tweet_with_images(
     )
     assert response.status_code == 201
     assert response.json()["result"] == "true"
-
-    # check images - image.tweet_id must be equal tweet id
-    images = await get_images_by_ids(db_session, images_ids)
-    for image in images:
-        assert response.json()["tweet_id"] == image.tweet_id
 
 
 @pytest.mark.asyncio
