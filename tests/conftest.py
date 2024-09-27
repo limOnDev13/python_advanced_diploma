@@ -1,38 +1,62 @@
 import os
-from typing import AsyncGenerator, Dict, Generator, List, Tuple
+from typing import AsyncGenerator, Callable, Dict, Generator, List, Tuple
 
 import pytest
 import pytest_asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
+import src.database.queries as q
 from src.api.routes import create_app
-from src.database.models import DB_URL, Base, User
+from src.config.config import load_config
+from src.database.models import Base
 from src.service.images import delete_images_by_ids
 from src.service.web import get_session
 
+db_config = load_config()
+DB_URL: str = db_config.db.url
 
-@pytest_asyncio.fixture(scope="function")
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Start a test database session"""
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def engine():
     engine = create_async_engine(DB_URL)
-    Session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-    session = Session()
-
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    yield session
+    yield engine
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def db_session(engine: AsyncEngine) -> AsyncGenerator[Callable, None]:
+    """Start a test database session"""
+    Session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    session: AsyncSession = Session()
+
+    # add 2 users
+    await q.create_user(session, {"api_key": "test_api_key", "name": "test"})
+    await q.create_user(session, {"api_key": "other_test_api_key", "name": "test"})
+
+    async def overrides_get_session(request: Request):
+        request.state.session = session
+        yield
+
+    yield overrides_get_session
     await session.close()
 
 
 @pytest.fixture(scope="function")
-def test_app(db_session: AsyncSession) -> Generator[FastAPI, None, None]:
+def test_app(db_session) -> Generator[FastAPI, None, None]:
     """Create a test_app with overridden dependencies"""
     _app: FastAPI = create_app()
-    _app.dependency_overrides[get_session] = lambda: db_session
+    _app.dependency_overrides[get_session] = db_session
     yield _app
     _app.dependency_overrides.clear()
 
@@ -40,6 +64,7 @@ def test_app(db_session: AsyncSession) -> Generator[FastAPI, None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create a http client"""
+    os.environ["ENV"] = "test"
     async with AsyncClient(
         transport=ASGITransport(app=test_app), base_url="http://localhost:8000"
     ) as client:
@@ -47,13 +72,9 @@ async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def user_data(db_session: AsyncSession) -> AsyncGenerator[Tuple[int, str], None]:
+async def user_data() -> AsyncGenerator[Tuple[int, str], None]:
     """Fixture. Returns id and api_key of test user"""
-    async with db_session.begin():
-        user: User = User(api_key="test_api_key", name="test_name_1")
-        db_session.add(user)
-        await db_session.commit()
-    yield user.id, "test_api_key"
+    yield 1, "test_api_key"
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -61,11 +82,7 @@ async def other_user_data(
     db_session: AsyncSession,
 ) -> AsyncGenerator[Tuple[int, str], None]:
     """Fixture. Returns id and api_key of second test user"""
-    async with db_session.begin():
-        user: User = User(api_key="other_test_api_key", name="test_name_2")
-        db_session.add(user)
-        await db_session.commit()
-    yield user.id, "other_test_api_key"
+    yield 2, "other_test_api_key"
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -84,7 +101,7 @@ async def tweet_id_without_img(
 @pytest.fixture(scope="function")
 def images_path() -> Generator[str, None, None]:
     """Fixture. Returns path to images"""
-    yield os.path.join(os.path.abspath("."), "src", "static", "images")
+    yield os.path.join(os.path.abspath("."), "client", "static", "images")
 
 
 @pytest_asyncio.fixture(scope="function")

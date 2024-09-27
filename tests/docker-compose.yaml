@@ -2,10 +2,10 @@ services:
   postgres:
     image: postgres:13.3
     environment:
-      # DEBUG
-      - POSTGRES_USER=debug
-      - POSTGRES_PASSWORD=debug
-      - POSTGRES_HOST=${POSTGRES_HOST}
+      # TEST
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_HOST=localhost
     ports:
       - '5432:5432'
     volumes:
