@@ -42,7 +42,7 @@ async def test_like_tweet(
 async def test_like_someone_else_tweet(
     client: AsyncClient,
     user_data: Tuple[int, str],
-    other_user_data: Tuple[int, int],
+    other_user_data: Tuple[int, str],
     tweet_id_with_images: int,
 ) -> None:
     """Testing when someone else liking tweet"""
@@ -90,7 +90,7 @@ async def test_like_tweet_with_invalid_api_key(
 
 @pytest.mark.asyncio
 async def test_like_not_existing_tweet(
-    client: AsyncClient, user_data: Tuple[int, int]
+    client: AsyncClient, user_data: Tuple[int, str]
 ) -> None:
     """Negative test of liking not existing tweet"""
     _, api_key = user_data

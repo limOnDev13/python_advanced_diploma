@@ -42,7 +42,9 @@ async def upload_image(image_file: UploadFile, session: AsyncSession) -> int:
     img_extension: Optional[str] = _file_extension(image_file.filename)
     image_id: int = await add_image(session)
     cur_dir_path: str = os.path.dirname(__file__)
-    images_path: str = os.path.join(cur_dir_path, "..", "static", "images")
+    images_path: str = os.path.join(
+        cur_dir_path, "..", "..", "client", "static", "images"
+    )
 
     if not img_extension:
         out_file_path = f"{images_path}/{image_id}"
@@ -108,7 +110,9 @@ async def delete_images_by_ids(images_ids: List[int]) -> None:
     # get current dir
     cur_dir_path: str = os.path.dirname(__file__)
     # get path to all images
-    images_dir: str = os.path.join(cur_dir_path, "..", "static", "images")
+    images_dir: str = os.path.join(
+        cur_dir_path, "..", "..", "client", "static", "images"
+    )
     # get images names
     images_names = await asyncio.gather(
         *[get_image_name_by_id(image_id, images_dir) for image_id in images_ids]
