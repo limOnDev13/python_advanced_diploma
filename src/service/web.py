@@ -61,12 +61,16 @@ async def get_session(request: Request):
         num_users = await q.count_users(session)
         logger.debug("There are %d users in the table", num_users)
 
-        # There must be at least one user with api_key = test
+        # There must be at least one user with api_key = test and another with test2
         if num_users is not None and num_users == 0:  # mypy
             new_user = await q.create_user(
                 session, {"api_key": "test", "name": "test_name"}
             )
             logger.debug("Add user with id %d and api_key %s", new_user.id, "test")
+            new_user = await q.create_user(
+                session, {"api_key": "test2", "name": "test_name"}
+            )
+            logger.debug("Add user with id %d and api_key %s", new_user.id, "test2")
 
     try:
         logger.debug("Before yield session")
