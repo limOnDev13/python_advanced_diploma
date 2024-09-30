@@ -10,7 +10,8 @@ The project is a corporate microblogging service (a very simplified version of T
 The service allows you to create tweets, attach images to them, subscribe to other bloggers,
 read tweets from people you follow, and like tweets. The service does not have user registration
 (this is a corporate network and users are created from the outside). 
-The frontend is provided by the Skillbox training platform (https://skillbox.ru/)
+The frontend is provided by the Skillbox training platform (https://skillbox.ru/).
+All server handles have been tested by pytest, all code has been verified using mypy, flake8, black and isort
 ## Technologies
 - Python
 - asyncio
