@@ -15,8 +15,8 @@ dict_config: dict = {
         }
     },
     "loggers": {
-        "routes_logger": {"level": "DEBUG", "handlers": ["console"], "propagate": True},
-        "query_logger": {"level": "DEBUG", "handlers": ["console"], "propagate": True},
-        "image_logger": {"level": "DEBUG", "handlers": ["console"], "propagate": True},
+        "routes_logger": {"level": "INFO", "handlers": ["console"], "propagate": True},
+        "query_logger": {"level": "INFO", "handlers": ["console"], "propagate": True},
+        "image_logger": {"level": "INFO", "handlers": ["console"], "propagate": True},
     },
 }
