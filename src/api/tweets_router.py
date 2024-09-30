@@ -1,6 +1,6 @@
 import asyncio
 from logging import getLogger
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -78,6 +78,7 @@ async def create_new_tweet(
 
     tweet_id: int = await q.create_tweet(session, user.id, tweet.model_dump())
     logger.debug("Tweet was created, tweet_id=%d", tweet_id)
+    logger.info("Tweet was created")
     response.status_code = status.HTTP_201_CREATED
     return {"result": "true", "tweet_id": tweet_id}
 
@@ -158,6 +159,7 @@ async def delete_tweet(request: Request, tweet_id: int):
         await delete_images_by_ids(images_ids)
         logger.debug("Images were deleted from disk")
 
+    logger.info("Tweet was deleted")
     return {"result": True}
 
 
@@ -341,8 +343,11 @@ async def get_list_tweets(request: Request):
         key=lambda tweet: len(tweet.users_like) if tweet.users_like else 0, reverse=True
     )  # mypy
 
-    # assemble result
-    return {
+    result: Dict[str, Any] = {
         "result": True,
         "tweets": [await tweet.to_json() for tweet in following_tweets],
     }
+    logger.debug("Tweet feed: %s", str(result))
+    logger.info("Done")
+    # assemble result
+    return result
