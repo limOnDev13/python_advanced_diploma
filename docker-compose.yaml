@@ -11,6 +11,10 @@ services:
         restart: true
     networks:
       - my_network
+    volumes:
+      - /images:/client/static/images
+    links:
+      - server
   postgres:
     image: postgres:latest
     environment:
@@ -26,7 +30,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - ./db/:/var/lib/postgresql/data
+      - ./db/:/var/lib/postgresql@17/data
     networks:
       - my_network
   server:
@@ -44,7 +48,9 @@ services:
         condition: service_healthy
         restart: true
     ports:
-      - "5000:8000"
+      - "5000:5000"
+    volumes:
+      - /images:/client/static/images
     networks:
       - my_network
 
