@@ -29,16 +29,18 @@ class LikeSchema(BaseModel):
     name: str = Field(default=..., description="User's name")
 
 
-class UserOutSchema(BaseModel):
-    result: bool = True
-    id: int = Field(default=..., description="User id")
-    name: str = Field(default=..., description="User's name")
+class FullUserSchema(UserSchema):
     followers: List[UserSchema] = Field(
         default_factory=list, description="List of followers"
     )
     following: List[UserSchema] = Field(
         default_factory=list, description="List of authors subscribed to by users"
     )
+
+
+class UserOutSchema(BaseModel):
+    result: bool = True
+    user: FullUserSchema = Field(...)
 
     class ConfigDict:
         orm_mod = True
