@@ -198,7 +198,12 @@ def _get_user_info(user: models.User) -> Dict[str, Any]:
     logger.info("Start getting user info")
     logger.debug("User followers: %s", str(user.followers))
     logger.debug("The user is subscribed to the authors: %s", str(user.authors))
-    return user.full_json()
+
+    result: Dict[str, Any] = dict()
+    result["result"] = True
+    result["user"] = user.full_json()
+
+    return result
 
 
 @users_router.get(
