@@ -49,42 +49,4 @@ def create_app() -> FastAPI:
     app.include_router(medias_router)
     app.include_router(users_router)
 
-    # mount static
-    cur_file_path: str = os.path.dirname(__file__)
-    app.mount(
-        "/static",
-        StaticFiles(
-            directory=os.path.join(cur_file_path, "..", "..", "client", "static")
-        ),
-        name="static",
-    )
-    app.mount(
-        "/js",
-        StaticFiles(
-            directory=os.path.join(cur_file_path, "..", "..", "client", "static", "js")
-        ),
-        name="js",
-    )
-    app.mount(
-        "/css",
-        StaticFiles(
-            directory=os.path.join(cur_file_path, "..", "..", "client", "static", "css")
-        ),
-        name="css",
-    )
-    app.mount(
-        "/images",
-        StaticFiles(
-            directory=os.path.join(
-                cur_file_path, "..", "..", "client", "static", "images"
-            )
-        ),
-        name="images",
-    )
-
-    # homepage
-    @app.get("/", response_class=FileResponse)
-    def main():
-        return FileResponse("./client/static/index.html")
-
     return app
