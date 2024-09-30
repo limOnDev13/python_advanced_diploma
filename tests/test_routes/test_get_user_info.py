@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Dict, Any
 
 import pytest
 from httpx import AsyncClient
@@ -19,12 +19,14 @@ async def test_get_info_about_other_user_without_followers_and_following(
     # check response.json()
     response_json: dict = response.json()
     assert response_json["result"] is True
-    assert response_json["id"] == user_id
-    assert isinstance(response_json["followers"], list)
-    assert isinstance(response_json["following"], list)
-    assert len(response_json["followers"]) == 0
-    assert len(response_json["following"]) == 0
-    assert "api_key" not in response_json
+    assert "user" in response_json
+    user_dict: Dict[str, Any] = response_json["user"]
+    assert user_dict["id"] == user_id
+    assert isinstance(user_dict["followers"], list)
+    assert isinstance(user_dict["following"], list)
+    assert len(user_dict["followers"]) == 0
+    assert len(user_dict["following"]) == 0
+    assert "api_key" not in user_dict
 
 
 @pytest.mark.asyncio
@@ -48,7 +50,7 @@ async def test_get_info_about_other_user_with_followers(
     # get info
     response = await client.get(BASE_ROUTE.format(user_id=user_id))
     assert response.status_code == 200
-    response_json: dict = response.json()
+    response_json: dict = response.json()["user"]
     assert len(response_json["followers"]) == 0
     assert len(response_json["following"]) == 0
 
@@ -62,7 +64,7 @@ async def test_get_info_about_other_user_with_followers(
     response = await client.get(BASE_ROUTE.format(user_id=user_id))
     assert response.status_code == 200
     # check response.json()
-    response_json = response.json()
+    response_json = response.json()["user"]
     assert len(response_json["followers"]) == 1
     assert len(response_json["following"]) == 0
     assert response_json["followers"][0]["id"] == other_user_id
@@ -79,7 +81,7 @@ async def test_get_info_about_other_user_with_following(
     # get info
     response = await client.get(BASE_ROUTE.format(user_id=user_id))
     assert response.status_code == 200
-    response_json: dict = response.json()
+    response_json: dict = response.json()["user"]
     assert len(response_json["followers"]) == 0
     assert len(response_json["following"]) == 0
 
@@ -93,7 +95,7 @@ async def test_get_info_about_other_user_with_following(
     response = await client.get(BASE_ROUTE.format(user_id=user_id))
     assert response.status_code == 200
     # check response.json()
-    response_json = response.json()
+    response_json = response.json()["user"]
     assert len(response_json["followers"]) == 0
     assert len(response_json["following"]) == 1
     assert response_json["following"][0]["id"] == other_user_id
@@ -110,13 +112,13 @@ async def test_get_info_about_other_user_with_following_and_followers(
     # get info about user
     response = await client.get(BASE_ROUTE.format(user_id=user_id))
     assert response.status_code == 200
-    response_json: dict = response.json()
+    response_json: dict = response.json()["user"]
     assert len(response_json["followers"]) == 0
     assert len(response_json["following"]) == 0
     # get info about other user
     response = await client.get(BASE_ROUTE.format(user_id=other_user_id))
     assert response.status_code == 200
-    response_json = response.json()
+    response_json = response.json()["user"]
     assert len(response_json["followers"]) == 0
     assert len(response_json["following"]) == 0
 
@@ -134,7 +136,7 @@ async def test_get_info_about_other_user_with_following_and_followers(
     response = await client.get(BASE_ROUTE.format(user_id=user_id))
     assert response.status_code == 200
     # check response.json()
-    response_json = response.json()
+    response_json = response.json()["user"]
     assert len(response_json["followers"]) == 1
     assert len(response_json["following"]) == 1
     assert response_json["following"][0]["id"] == other_user_id
@@ -143,7 +145,7 @@ async def test_get_info_about_other_user_with_following_and_followers(
     response = await client.get(BASE_ROUTE.format(user_id=other_user_id))
     assert response.status_code == 200
     # check response.json()
-    response_json = response.json()
+    response_json = response.json()["user"]
     assert len(response_json["followers"]) == 1
     assert len(response_json["following"]) == 1
     assert response_json["following"][0]["id"] == user_id

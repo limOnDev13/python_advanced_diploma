@@ -21,6 +21,7 @@ async def test_like_tweet(
         BASE_ROUTE.format(tweet_id=tweet_id_with_images), headers={"api-key": api_key}
     )
     assert response.status_code == 200
+    assert response.json()["result"] is True
     # try like same tweet
     response = await client.post(
         BASE_ROUTE.format(tweet_id=tweet_id_with_images), headers={"api-key": api_key}

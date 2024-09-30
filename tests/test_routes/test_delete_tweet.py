@@ -19,6 +19,7 @@ async def test_delete_tweet_without_images(
         BASE_ROUTE.format(tweet_id=tweet_id_without_img), headers={"api-key": api_key}
     )
     assert response.status_code == 200
+    assert response.json()["result"] is True
 
     # if you try to delete the same tweet, there must be a 404 error
     response = await client.delete(

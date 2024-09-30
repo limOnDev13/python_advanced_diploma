@@ -19,6 +19,7 @@ async def test_follow_author(
         BASE_ROUTE.format(user_id=other_user_id), headers={"api-key": api_key}
     )
     assert response.status_code == 200
+    assert response.json()['result'] is True
     # try again follow author
     response = await client.post(
         BASE_ROUTE.format(user_id=other_user_id), headers={"api-key": api_key}

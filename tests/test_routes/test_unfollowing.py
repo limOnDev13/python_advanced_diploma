@@ -21,6 +21,7 @@ async def test_unfollow_author(
         BASE_ROUTE.format(user_id=author_id), headers={"api-key": follower_api_key}
     )
     assert response.status_code == 200
+    assert response.json()["result"] is True
 
     # try again unfollowing author
     response = await client.delete(

@@ -19,6 +19,7 @@ async def test_add_image(client: AsyncClient, user_data: tuple[int, str]) -> Non
         headers={"api-key": api_key},
     )
     assert response.status_code == 201
+    assert response.json()["result"] is True
     image_id: int = response.json()["media_id"]
     response = await client.post(
         BASE_ROUTE,

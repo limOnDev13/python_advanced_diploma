@@ -18,6 +18,7 @@ async def test_unlike_tweet(
         BASE_ROUTE.format(tweet_id=tweet_id_with_like), headers={"api-key": api_key}
     )
     assert response.status_code == 200
+    assert response.json()["result"] is True
     # unlike this tweet again
     response = await client.delete(
         BASE_ROUTE.format(tweet_id=tweet_id_with_like), headers={"api-key": api_key}
