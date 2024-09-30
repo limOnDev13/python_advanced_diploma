@@ -61,7 +61,7 @@ logger = getLogger("routes_logger.medias_logger")
         },
     },
 )
-async def save_image(image: UploadFile, request: Request):
+async def save_image(file: UploadFile, request: Request):
     """
     The endpoint saves the image to disk
     """
@@ -71,10 +71,10 @@ async def save_image(image: UploadFile, request: Request):
 
     try:
         logger.debug("Validating image")
-        validate_image(image)
+        validate_image(file)
 
         logger.debug("Trying to upload an image")
-        image_id: int = await upload_image(image, session)
+        image_id: int = await upload_image(file, session)
         logger.debug("Image was uploaded, image_id=%s", image_id)
 
         return {"result": True, "media_id": image_id}
@@ -88,4 +88,4 @@ async def save_image(image: UploadFile, request: Request):
         logger.exception("Smth wrong", exc_info=exc)
         raise HTTPException(detail=str(exc), status_code=400)
     finally:
-        await image.close()
+        await file.close()
