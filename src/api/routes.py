@@ -1,10 +1,7 @@
-import os
 from logging import getLogger
 from logging.config import dictConfig
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 from src.api.medias_router import medias_router
 from src.api.tweets_router import tweets_router

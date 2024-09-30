@@ -107,7 +107,9 @@ class Tweet(Base):
                 )
                 if image_name is None:
                     image_name = ""
-                tweet_json["attachments"].append(os.path.join("client", "static", "images", image_name))
+                tweet_json["attachments"].append(
+                    os.path.join("client", "static", "images", image_name)
+                )
 
         tweet_json["author"] = self.user.brief_json()
 

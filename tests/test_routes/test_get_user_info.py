@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 import pytest
 from httpx import AsyncClient
