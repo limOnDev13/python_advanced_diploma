@@ -34,10 +34,9 @@ async def create_user(session: AsyncSession, user_dict: Dict[str, str]) -> User:
     :type user_dict: Dict[str, str]
     :return: None
     """
-    async with session.begin():
-        new_user = User(**user_dict)
-        session.add(new_user)
-        await session.commit()
+    new_user = User(**user_dict)
+    session.add(new_user)
+    await session.commit()
     return new_user
 
 
